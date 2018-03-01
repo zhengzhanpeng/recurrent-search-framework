@@ -208,7 +208,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
 
     @Override
     public List<ResultT> getResultsUntilEnoughOrTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = preparatoryWorkBeforeGetResult(keySearchT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
+        RuleParameter ruleParameter = preparatoryWorkBeforeGetResult(keySearchT, timeout, unit, expectNum);
 
         final List<ResultT> resultList = new ArrayList<>();
         Future timingCancelFuture = startAddResultToListUntilEnough(resultList, ruleParameter);
@@ -269,7 +269,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
 
     @Override
     public List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) {
-        RuleParameter<ResultT> rule = preparatoryWorkBeforeGetResult(keySearchT, NOT_HAVE_TIMEOUT, null, expectNum);
+        RuleParameter<ResultT> rule = preparatoryWorkBeforeGetResult(keySearchT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, expectNum);
         List<ResultT> list = startGetResultsUntilEnough(rule);
         unifyResultCache(rule, list);
         return list;
