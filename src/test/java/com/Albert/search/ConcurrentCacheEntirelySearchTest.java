@@ -3,13 +3,13 @@ package com.Albert.search;
 import com.Albert.searchImpl.boxSearchImpl.ConcurrentCacheEntirelySearch;
 import com.Albert.searchModel.DesktopSearchModel;
 import com.Albert.searchModel.SearchModel;
+import com.Albert.utils.RunEnvironmentUtil;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -23,38 +23,17 @@ class ConcurrentCacheEntirelySearchTest {
 
     @BeforeAll
     static void initCreateFileOfTest() throws IOException {
-        File dirFile = new File("D://dirBeUsedTest");
-        dirFile.mkdir();
-        File readMeFile = new File("D://dirBeUsedTest/README.md");
-        readMeFile.createNewFile();
-        File beUsedDeleteFile = new File("D://dirBeUsedTest/delete.md");
-        beUsedDeleteFile.createNewFile();
+        RunEnvironmentUtil.runBefore();
+    }
+
+    @AfterAll
+    static void deleteFileOfTest() {
+        RunEnvironmentUtil.runAfter();
     }
 
     @BeforeEach
     void makeSureOperatorIsNew() throws IOException {
         concurrentCacheEntirelyOperator = new ConcurrentCacheEntirelySearch(searchModel, Arrays.asList(fileNames));
-    }
-
-    @AfterAll
-    static void deleteFileOfTest() {
-        File readMeFile = new File("D://dirBeUsedTest/README.md");
-        readMeFile.delete();
-        File beUsedDeleteFile = new File("D://dirBeUsedTest/delete.md");
-        beUsedDeleteFile.delete();
-        File dirFile = new File("D://dirBeUsedTest");
-        dirFile.delete();
-    }
-
-    @Test
-    void getYouWantToSearchResult() {
-        BlockingQueue<File> queue = concurrentCacheEntirelyOperator.getResultsBlockingQueue("README");
-        try {
-            String name1 = queue.take().getName();
-            System.out.println(name1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Test

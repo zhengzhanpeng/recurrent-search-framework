@@ -1,6 +1,6 @@
 package com.Albert.searchModel;
 
-import com.Albert.pojo.MessageOfSearch;
+import com.Albert.pojo.MessageOfSearched;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,12 +16,12 @@ import java.util.stream.Collectors;
 public class DesktopSearchModel implements SearchModel<String, File, String> {
 
     @Override
-    public MessageOfSearch<File, String> search(String keySearch, String canBeSearched) {
+    public MessageOfSearched<File, String> search(String keySearch, String canBeSearched) {
         File[] childFiles = getAllChildFile(canBeSearched);
         List<File> trueResults  = getTrueResults(keySearch, childFiles);
         List<String> canBeSearcheds = getCanBeSearcheds(childFiles);
-        MessageOfSearch messageOfSearch = new MessageOfSearch(trueResults, canBeSearcheds);
-        return messageOfSearch;
+        MessageOfSearched messageOfSearched = new MessageOfSearched(trueResults, canBeSearcheds);
+        return messageOfSearched;
     }
 
     private File[] getAllChildFile(String canBeSearched) {

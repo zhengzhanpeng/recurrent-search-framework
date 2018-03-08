@@ -7,11 +7,11 @@ import java.util.Optional;
  * @author Albert
  * @create 2018-02-03 20:54
  */
-public class MessageOfSearch<TrueT, CanBeSearchedT> {
+public class MessageOfSearched<TrueT, CanBeSearchedT> {
     private final List<TrueT> trueResult;
     private final List<CanBeSearchedT> canBeSearched;
 
-    public MessageOfSearch(List<TrueT> trueResult, List<CanBeSearchedT> canBeSearched) {
+    public MessageOfSearched(List<TrueT> trueResult, List<CanBeSearchedT> canBeSearched) {
         this.trueResult = trueResult;
         this.canBeSearched = canBeSearched;
     }

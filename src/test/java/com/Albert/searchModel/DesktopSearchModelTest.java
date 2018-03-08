@@ -1,6 +1,6 @@
 package com.Albert.searchModel;
 
-import com.Albert.pojo.MessageOfSearch;
+import com.Albert.pojo.MessageOfSearched;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -36,8 +36,8 @@ class DesktopSearchModelTest {
 
     @Test
     void search() {
-        MessageOfSearch<File, String> messageOfSearch = desktopSearchModel.search("fileOfBeUsedTest", "D:\\dirBeUsedTest");
-        Optional<List<File>> optionalFile = messageOfSearch.getTrueResult();
+        MessageOfSearched<File, String> messageOfSearched = desktopSearchModel.search("fileOfBeUsedTest", "D:\\dirBeUsedTest");
+        Optional<List<File>> optionalFile = messageOfSearched.getTrueResult();
         List<File> list = optionalFile.get();
         Assertions.assertNotNull(list);
         Assertions.assertEquals("fileOfBeUsedTest.txt", list.get(0).getName());

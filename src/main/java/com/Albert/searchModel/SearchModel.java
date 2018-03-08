@@ -1,6 +1,6 @@
 package com.Albert.searchModel;
 
-import com.Albert.pojo.MessageOfSearch;
+import com.Albert.pojo.MessageOfSearched;
 
 /**
  * @author Albert
@@ -8,7 +8,7 @@ import com.Albert.pojo.MessageOfSearch;
  */
 public interface SearchModel<KeySearchT, TrueObjectT, CanBeSearchedT> {
 
-    MessageOfSearch<TrueObjectT, CanBeSearchedT> search(KeySearchT keySearch, CanBeSearchedT canBeSearched);
+    MessageOfSearched<TrueObjectT, CanBeSearchedT> search(KeySearchT keySearch, CanBeSearchedT canBeSearched);
 
     boolean remove(TrueObjectT object);
 
