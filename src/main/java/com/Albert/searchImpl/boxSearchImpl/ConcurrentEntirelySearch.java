@@ -126,7 +126,7 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
 
     @Override
     public List<ResultT> getResultsUntilOneTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrGitOneTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+        return getResultsUntilEnoughOrOneTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
     }
 
     private ArrayList<ResultT> putResultUntilOneTimeoutOrEnough(SearchParameter parameter) {
@@ -207,7 +207,7 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnoughOrGitOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
+    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
         SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
         startSearch(parameter, rootCanBeSearch);
         ArrayList<ResultT> list = putResultUntilOneTimeoutOrEnough(parameter);

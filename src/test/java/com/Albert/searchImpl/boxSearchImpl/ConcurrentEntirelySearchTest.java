@@ -44,7 +44,7 @@ class ConcurrentEntirelySearchTest {
         });
     }
 
-    @RepeatedTest(5)
+    @Test
     void getResultsUntilOneTimeout() {
         Assertions.assertTimeout(ofMillis(3000), () -> {
             List<File> list;
@@ -59,7 +59,7 @@ class ConcurrentEntirelySearchTest {
         });
     }
 
-    @RepeatedTest(5)
+    @Test
     void getResultsUntilTimeout() {
         Assertions.assertTimeout(ofMillis(3000), () -> {
             List<File> list;
@@ -76,11 +76,11 @@ class ConcurrentEntirelySearchTest {
 
     @Test
     void getResultsUntilEnoughOrTimeout() {
-//        Assertions.assertTimeout(ofMillis(3000), () -> {
-//            List<File> list;
-//            list = searchService.getResultsUntilEnoughOrTimeout(key,1, 1000, TimeUnit.MILLISECONDS);
-//            Assertions.assertTrue(list.size() >= 1);
-//        });
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            list = searchService.getResultsUntilEnoughOrTimeout(key,1, 1000, TimeUnit.MILLISECONDS);
+            Assertions.assertTrue(list.size() >= 1);
+        });
 
         Assertions.assertTimeout(ofMillis(3000), () -> {
             List<File> list;
@@ -94,17 +94,17 @@ class ConcurrentEntirelySearchTest {
     }
 
     @Test
-    void getResultsUntilEnoughOrGitOneTimeout() {
+    void getResultsUntilEnoughOrOneTimeout() {
         Assertions.assertTimeout(ofMillis(3000), () -> {
             List<File> list;
-            list = searchService.getResultsUntilEnoughOrGitOneTimeout(key,1, 1000, TimeUnit.MILLISECONDS);
+            list = searchService.getResultsUntilEnoughOrOneTimeout(key,1, 1000, TimeUnit.MILLISECONDS);
             Assertions.assertTrue(list.size() >= 1);
         });
 
         Assertions.assertTimeout(ofMillis(3000), () -> {
             List<File> list;
             long starTime = System.currentTimeMillis();
-            list = searchService.getResultsUntilEnoughOrGitOneTimeout(key,2, 1000, TimeUnit.MILLISECONDS);
+            list = searchService.getResultsUntilEnoughOrOneTimeout(key,2, 1000, TimeUnit.MILLISECONDS);
             long endTime = System.currentTimeMillis();
             long runTime = endTime - starTime;
             Assertions.assertTrue(list.size() >= 1);

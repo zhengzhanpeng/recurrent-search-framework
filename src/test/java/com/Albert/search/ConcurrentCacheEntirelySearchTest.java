@@ -129,7 +129,7 @@ class ConcurrentCacheEntirelySearchTest {
         int timeout = 1000 * 3;
         Assertions.assertTimeout(ofMillis(1000), () -> {
             long startTime = System.currentTimeMillis();
-            List<File> list = concurrentCacheEntirelyOperator.getResultsUntilEnoughOrGitOneTimeout(keyExist, expectNum, timeout, TimeUnit.MILLISECONDS);
+            List<File> list = concurrentCacheEntirelyOperator.getResultsUntilEnoughOrOneTimeout(keyExist, expectNum, timeout, TimeUnit.MILLISECONDS);
             long endTime = System.currentTimeMillis();
             long runTime = endTime - startTime - ERROR_RANGE;
             Assertions.assertTrue(isEnoughAndNotTimeout(list, expectNum, runTime, timeout));
@@ -137,7 +137,7 @@ class ConcurrentCacheEntirelySearchTest {
 
         String keyCanNotExist = "sdlfksdlfksd.sdfsd";
         long startTime = System.currentTimeMillis();
-        List<File> list = concurrentCacheEntirelyOperator.getResultsUntilEnoughOrGitOneTimeout(keyCanNotExist, expectNum, timeout, TimeUnit.MILLISECONDS);
+        List<File> list = concurrentCacheEntirelyOperator.getResultsUntilEnoughOrOneTimeout(keyCanNotExist, expectNum, timeout, TimeUnit.MILLISECONDS);
         long endTime = System.currentTimeMillis();
         long runTime = endTime - startTime + ERROR_RANGE;
         Assertions.assertTrue(isTimeoutAndNotEnough(expectNum, list, runTime, timeout));

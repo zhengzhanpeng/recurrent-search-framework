@@ -162,7 +162,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnoughOrGitOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
+    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
         RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keySearchT, timeout, unit, expectNum);
 
         List list = startGetResultsUntilEnoughOrOneTimeout(ruleParameter);

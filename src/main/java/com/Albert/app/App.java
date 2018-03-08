@@ -19,7 +19,7 @@ public class App {
         SearchModel searchModel = new DesktopSearchModel();
         String[] rootSearch = {"D:\\"};
         CacheEntirelySearch<String, File> search = new ConcurrentCacheEntirelySearch(searchModel, Arrays.asList(rootSearch));
-        List<File> list = search.getResultsUntilEnoughOrGitOneTimeout("README.html", 1, 2, TimeUnit.MINUTES);
+        List<File> list = search.getResultsUntilEnoughOrOneTimeout("README.html", 1, 2, TimeUnit.MINUTES);
         System.out.println("------find size:" + list.size());
         list.forEach(file -> System.out.println(file.getPath()));
     }
