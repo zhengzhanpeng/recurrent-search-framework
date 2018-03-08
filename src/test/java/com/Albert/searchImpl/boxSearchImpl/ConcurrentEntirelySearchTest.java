@@ -1,10 +1,7 @@
 package com.Albert.searchImpl.boxSearchImpl;
 
 import com.Albert.utils.RunEnvironmentUtil;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +44,7 @@ class ConcurrentEntirelySearchTest {
         });
     }
 
-    @Test
+    @RepeatedTest(5)
     void getResultsUntilOneTimeout() {
         Assertions.assertTimeout(ofMillis(3000), () -> {
             List<File> list;
@@ -62,9 +59,19 @@ class ConcurrentEntirelySearchTest {
         });
     }
 
-    @Test
+    @RepeatedTest(5)
     void getResultsUntilTimeout() {
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            list = searchService.getResultsUntilTimeout(key, 1000, TimeUnit.MILLISECONDS);
+            Assertions.assertTrue(list.size() >= 1);
+        });
 
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            list = searchService.getResultsUntilTimeout(keyNotExist, 1000, TimeUnit.MILLISECONDS);
+            Assertions.assertTrue(list.size() == 0);
+        });
     }
 
     @Test

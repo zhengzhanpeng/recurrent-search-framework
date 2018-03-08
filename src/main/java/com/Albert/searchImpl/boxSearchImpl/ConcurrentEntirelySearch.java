@@ -22,6 +22,7 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
     private final SearchModel<KeySearchT, ResultT, CanBeSearchT> searchModel;
     private final List<CanBeSearchT> rootCanBeSearch;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private final ExecutorService getService = Executors.newCachedThreadPool();
 
     public ConcurrentEntirelySearch(SearchModel<KeySearchT, ResultT, CanBeSearchT> searchModel, List<CanBeSearchT> rootCanBeSearch) {
         this.searchModel = searchModel;
@@ -131,7 +132,7 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
                     continue;
                 }
                 isNotTimeout = false;
-                isNotEnough = isEnough(parameter.exceptNum, list);
+                isNotEnough = checkEnough(parameter.exceptNum, list);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -141,13 +142,54 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
         return list;
     }
 
-    private boolean isEnough(int exceptNum, ArrayList<ResultT> list) {
+    private boolean checkEnough(int exceptNum, List<ResultT> list) {
         return exceptNum != 0 && list.size() >= exceptNum;
     }
 
     @Override
     public List<ResultT> getResultsUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        return null;
+        final List<ResultT> list = new ArrayList<>();
+        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
+        startSearch(parameter, rootCanBeSearch);
+        addResultToListWithTiming(list, parameter);
+        return list;
+    }
+
+    private void addResultToListWithTiming(List<ResultT> list, SearchParameter parameter) {
+        final Future<?> cancelFuture = getService.submit(() -> {
+            boolean isNotEnough = true;
+            while (isNotEnough) {
+                ResultT result = takeResultFromQueue(parameter);
+                Optional.ofNullable(result).ifPresent(r -> list.add(r));
+                isNotEnough = checkEnough(parameter.exceptNum, list);
+            }
+        });
+        timingCancel(parameter, cancelFuture);
+    }
+
+    private ResultT takeResultFromQueue(SearchParameter parameter) {
+        ResultT resultT = null;
+        try {
+            resultT = parameter.resultQueue.take();
+        } catch (InterruptedException e) {
+            System.out.println("The take method from queue is canceled");
+        }
+        return resultT;
+    }
+
+    private void timingCancel(SearchParameter parameter, Future<?> cancelFuture) {
+        try {
+            cancelFuture.get(parameter.timeout, parameter.unit);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+
+        } finally {
+            cancelFuture.cancel(true);
+            parameter.searchService.shutdownNow();
+        }
     }
 
     @Override
