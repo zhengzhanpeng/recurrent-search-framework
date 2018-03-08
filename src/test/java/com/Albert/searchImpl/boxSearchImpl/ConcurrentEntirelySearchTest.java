@@ -30,7 +30,7 @@ class ConcurrentEntirelySearchTest {
     void getAResult() {
         String key = "README";
         File result = searchService.getAResult(key);
-        Assertions.assertTrue(result != null);
+        Assertions.assertEquals(result != null, true);
     }
 
     @Test
@@ -76,10 +76,40 @@ class ConcurrentEntirelySearchTest {
 
     @Test
     void getResultsUntilEnoughOrTimeout() {
+//        Assertions.assertTimeout(ofMillis(3000), () -> {
+//            List<File> list;
+//            list = searchService.getResultsUntilEnoughOrTimeout(key,1, 1000, TimeUnit.MILLISECONDS);
+//            Assertions.assertTrue(list.size() >= 1);
+//        });
+
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            long starTime = System.currentTimeMillis();
+            list = searchService.getResultsUntilEnoughOrTimeout(key,2, 1000, TimeUnit.MILLISECONDS);
+            long endTime = System.currentTimeMillis();
+            long runTime = endTime - starTime;
+            Assertions.assertTrue(list.size() >= 1);
+            Assertions.assertTrue(runTime >= 1000);
+        });
     }
 
     @Test
     void getResultsUntilEnoughOrGitOneTimeout() {
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            list = searchService.getResultsUntilEnoughOrGitOneTimeout(key,1, 1000, TimeUnit.MILLISECONDS);
+            Assertions.assertTrue(list.size() >= 1);
+        });
+
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            long starTime = System.currentTimeMillis();
+            list = searchService.getResultsUntilEnoughOrGitOneTimeout(key,2, 1000, TimeUnit.MILLISECONDS);
+            long endTime = System.currentTimeMillis();
+            long runTime = endTime - starTime;
+            Assertions.assertTrue(list.size() >= 1);
+            Assertions.assertTrue(runTime >= 1000);
+        });
     }
 
     @Test
