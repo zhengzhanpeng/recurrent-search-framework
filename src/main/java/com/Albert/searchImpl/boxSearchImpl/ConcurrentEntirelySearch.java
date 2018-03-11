@@ -35,6 +35,51 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
         return resultT;
     }
 
+    @Override
+    public ResultT getAResultUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit timeUnit) throws TimeoutException {
+        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
+        startSearch(parameter, rootCanBeSearch);
+        shutdownSearchWhenTimeout(parameter);
+        ResultT resultT = getResultAndShutdownNowWhenHaveGot(parameter);
+        return resultT;
+    }
+
+    @Override
+    public List<ResultT> getResultsUntilOneTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
+        return getResultsUntilEnoughOrOneTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+    }
+
+    @Override
+    public List<ResultT> getResultsUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
+        return getResultsUntilEnoughOrTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+    }
+
+    @Override
+    public List<ResultT> getResultsUntilEnoughOrTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
+        final List<ResultT> list = new ArrayList<>();
+        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
+        startSearch(parameter, rootCanBeSearch);
+        addResultToListWithTiming(list, parameter);
+        return list;
+    }
+
+    @Override
+    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
+        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
+        startSearch(parameter, rootCanBeSearch);
+        ArrayList<ResultT> list = putResultUntilOneTimeoutOrEnough(parameter);
+        return list;
+    }
+
+    @Override
+    public List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) throws TimeoutException {
+        final List<ResultT> list = new ArrayList<>();
+        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, MAX_WAIT_MILLI, TimeUnit.MILLISECONDS, expectNum);
+        startSearch(parameter, rootCanBeSearch);
+        addResultToListWithTimingThrowTimeoutException(list, parameter);
+        return list;
+    }
+
     private SearchParameter createSearchRuleBeforeSearch(KeySearchT keySearchT, long timeout, TimeUnit unit, int exceptNum) {
         SearchParameter parameter = new SearchParameter();
         BlockingQueue<ResultT> resultQueue = new LinkedBlockingDeque<>();
@@ -95,15 +140,6 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
         });
     }
 
-    @Override
-    public ResultT getAResultUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
-        startSearch(parameter, rootCanBeSearch);
-        shutdownSearchWhenTimeout(parameter);
-        ResultT resultT = getResultAndShutdownNowWhenHaveGot(parameter);
-        return resultT;
-    }
-
     private void shutdownSearchWhenTimeout(SearchParameter parameter) {
         scheduledExecutorService.schedule(() -> {
             parameter.searchService.shutdownNow();
@@ -120,11 +156,6 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
         } finally {
             return resultT;
         }
-    }
-
-    @Override
-    public List<ResultT> getResultsUntilOneTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrOneTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
     }
 
     private ArrayList<ResultT> putResultUntilOneTimeoutOrEnough(SearchParameter parameter) {
@@ -151,11 +182,6 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
 
     private boolean isEnough(int exceptNum, List<ResultT> list) {
         return exceptNum != 0 && list.size() >= exceptNum;
-    }
-
-    @Override
-    public List<ResultT> getResultsUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
     }
 
     private void addResultToListWithTiming(List<ResultT> list, SearchParameter parameter) {
@@ -217,32 +243,6 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
             cancelFuture.cancel(true);
             parameter.searchService.shutdownNow();
         }
-    }
-
-    @Override
-    public List<ResultT> getResultsUntilEnoughOrTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
-        final List<ResultT> list = new ArrayList<>();
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
-        startSearch(parameter, rootCanBeSearch);
-        addResultToListWithTiming(list, parameter);
-        return list;
-    }
-
-    @Override
-    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
-        startSearch(parameter, rootCanBeSearch);
-        ArrayList<ResultT> list = putResultUntilOneTimeoutOrEnough(parameter);
-        return list;
-    }
-
-    @Override
-    public List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) throws TimeoutException {
-        final List<ResultT> list = new ArrayList<>();
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, MAX_WAIT_MILLI, TimeUnit.MILLISECONDS, expectNum);
-        startSearch(parameter, rootCanBeSearch);
-        addResultToListWithTimingThrowTimeoutException(list, parameter);
-        return list;
     }
 
     private class SearchParameter {
