@@ -114,5 +114,10 @@ class ConcurrentEntirelySearchTest {
 
     @Test
     void getResultsUntilEnough() {
+        Assertions.assertTimeout(ofMillis(3000), () -> {
+            List<File> list;
+            list = searchService.getResultsUntilEnough(key,1);
+            Assertions.assertTrue(list.size() >= 1);
+        });
     }
 }

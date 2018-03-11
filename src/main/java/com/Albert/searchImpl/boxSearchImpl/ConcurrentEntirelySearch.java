@@ -5,10 +5,7 @@ import com.Albert.search.boxSearch.EntirelySearch;
 import com.Albert.searchModel.SearchModel;
 import com.Albert.utils.ParameterUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -17,7 +14,8 @@ import java.util.concurrent.*;
  */
 public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> implements EntirelySearch<KeySearchT, ResultT> {
     private static final int NOT_LIMIT_EXPECT_NUM = 0;
-    public static final int NOT_HAVE_TIMEOUT = 0;
+    private static final int NOT_HAVE_TIMEOUT = 0;
+    private static final long MAX_WAIT_MILLI = 3*1000*60;
 
     private final SearchModel<KeySearchT, ResultT, CanBeSearchT> searchModel;
     private final List<CanBeSearchT> rootCanBeSearch;
@@ -216,7 +214,7 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
 
     @Override
     public List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) {
-        return null;
+        return getResultsUntilEnoughOrTimeout(keySearchT, expectNum, MAX_WAIT_MILLI, TimeUnit.MILLISECONDS);
     }
 
     private class SearchParameter {
