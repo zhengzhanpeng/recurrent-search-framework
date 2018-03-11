@@ -333,18 +333,6 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public void remove(ResultT value) {
-        boolean result = searchModel.remove(value);
-        clearCacheIfSuccess(result);
-    }
-
-    @Override
-    public void add(ResultT value) {
-        boolean result = searchModel.add(value);
-        clearCacheIfSuccess(result);
-    }
-
-    @Override
     public void clearCache() {
         cacheResults.clearCache();
     }
@@ -374,7 +362,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
 
     }
 
-    private void clearCacheIfSuccess(boolean result) {
+    private void clearCacheIfTrue(boolean result) {
         if (result) {
             clearCache();
         }

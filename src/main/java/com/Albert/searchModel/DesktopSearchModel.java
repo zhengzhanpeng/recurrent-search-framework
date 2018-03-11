@@ -46,12 +46,10 @@ public class DesktopSearchModel implements SearchModel<String, File, String> {
                 .map(objectOfTest -> objectOfTest.getPath()).collect(Collectors.toList());
     }
 
-    @Override
     public boolean remove(File removeTarget) {
         return removeTarget.delete();
     }
 
-    @Override
     public boolean add(File addTarget) {
         try {
             return addTarget.createNewFile();
@@ -62,7 +60,6 @@ public class DesktopSearchModel implements SearchModel<String, File, String> {
         }
     }
 
-    @Override
     public boolean isTrueObject(String keySearch, File object) {
         if (keySearch != null && object != null) {
             return equalsName(keySearch, object);

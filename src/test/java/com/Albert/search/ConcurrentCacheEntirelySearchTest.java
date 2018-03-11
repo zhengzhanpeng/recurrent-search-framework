@@ -36,15 +36,6 @@ class ConcurrentCacheEntirelySearchTest {
         concurrentCacheEntirelyOperator = new ConcurrentCacheEntirelySearch(searchModel, Arrays.asList(fileNames));
     }
 
-    @Test
-    void remove() {
-        File file = new File("D://dirBeUsedTest/delete.md");
-        concurrentCacheEntirelyOperator.remove(file);
-        boolean result = file.isFile();
-        Assertions.assertEquals(false, result);
-        createNewFile(file);
-    }
-
     private void createNewFile(File file) {
         try {
             file.createNewFile();
@@ -57,17 +48,6 @@ class ConcurrentCacheEntirelySearchTest {
     void clearCache() {
         concurrentCacheEntirelyOperator.clearCache();
         Assertions.assertEquals(true, concurrentCacheEntirelyOperator.isEmpty());
-    }
-
-    @Test
-    void add() {
-        File file = new File("D://dirBeUsedTest/test");
-        boolean result = file.isFile();
-        Assertions.assertEquals(false, result);
-        concurrentCacheEntirelyOperator.add(file);
-        result = file.isFile();
-        Assertions.assertEquals(true, result);
-        file.delete();
     }
 
     @RepeatedTest(2)
