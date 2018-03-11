@@ -1,6 +1,5 @@
-package com.Albert.search;
+package com.Albert.searchImpl.boxSearchImpl;
 
-import com.Albert.searchImpl.boxSearchImpl.ConcurrentCacheEntirelySearch;
 import com.Albert.searchModel.DesktopSearchModel;
 import com.Albert.searchModel.SearchModel;
 import com.Albert.utils.RunEnvironmentUtil;
