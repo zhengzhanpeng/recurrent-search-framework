@@ -309,7 +309,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
         try {
             return resultTBlockingQueue.take();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("the action of take method is canceled");
         }
         return null;
     }
