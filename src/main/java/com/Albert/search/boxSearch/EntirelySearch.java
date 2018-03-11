@@ -2,6 +2,7 @@ package com.Albert.search.boxSearch;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Albert
@@ -12,5 +13,5 @@ public interface EntirelySearch<KeySearchT, ResultT> extends Search<KeySearchT, 
     List<ResultT> getResultsUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit);
     List<ResultT> getResultsUntilEnoughOrTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit);
     List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit);
-    List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum);
+    List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) throws TimeoutException;
 }
