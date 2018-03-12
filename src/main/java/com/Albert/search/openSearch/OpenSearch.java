@@ -1,7 +1,7 @@
 package com.Albert.search.openSearch;
 
 /**
- * @author ho
+ * @author Albert
  * @create 2018-03-11 13:39
  */
 public interface OpenSearch<PathT, KeyT, ResultT> {
