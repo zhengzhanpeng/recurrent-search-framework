@@ -12,23 +12,23 @@ import java.util.concurrent.*;
  * @author Albert
  * @create 2018-02-09 14:22
  */
-public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> implements EntirelySearch<KeySearchT, ResultT> {
+public class ConcurrentEntirelySearch<KeyT, ResultT, PathT> implements EntirelySearch<KeyT, ResultT> {
     private static final int NOT_LIMIT_EXPECT_NUM = 0;
     private static final int NOT_HAVE_TIMEOUT = 0;
     private static final long MAX_WAIT_MILLI = 3*1000*60;
 
-    private final SearchModel<KeySearchT, ResultT, CanBeSearchT> searchModel;
-    private final List<CanBeSearchT> rootCanBeSearch;
+    private final SearchModel<KeyT, ResultT, PathT> searchModel;
+    private final List<PathT> rootCanBeSearch;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService getService = Executors.newCachedThreadPool();
 
-    public ConcurrentEntirelySearch(SearchModel<KeySearchT, ResultT, CanBeSearchT> searchModel, List<CanBeSearchT> rootCanBeSearch) {
+    public ConcurrentEntirelySearch(SearchModel<KeyT, ResultT, PathT> searchModel, List<PathT> rootCanBeSearch) {
         this.searchModel = searchModel;
         this.rootCanBeSearch = rootCanBeSearch;
     }
 
     @Override
-    public ResultT getAResult(KeySearchT keySearch) {
+    public ResultT getAResult(KeyT keySearch) {
         SearchParameter parameter = createSearchRuleBeforeSearch(keySearch, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, NOT_LIMIT_EXPECT_NUM);
         startSearch(parameter, rootCanBeSearch);
         ResultT resultT = getUtilHaveGot(parameter);
@@ -36,8 +36,8 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
     }
 
     @Override
-    public ResultT getAResultUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
+    public ResultT getAResultUntilTimeout(KeyT keyT, long timeout, TimeUnit timeUnit) throws TimeoutException {
+        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
         startSearch(parameter, rootCanBeSearch);
         shutdownSearchWhenTimeout(parameter);
         ResultT resultT = getResultAndShutdownNowWhenHaveGot(parameter);
@@ -45,48 +45,48 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
     }
 
     @Override
-    public List<ResultT> getResultsUntilOneTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrOneTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+    public List<ResultT> getResultsUntilOneTimeout(KeyT keyT, long timeout, TimeUnit unit) {
+        return getResultsUntilEnoughOrOneTimeout(keyT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
     }
 
     @Override
-    public List<ResultT> getResultsUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrTimeout(keySearchT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+    public List<ResultT> getResultsUntilTimeout(KeyT keyT, long timeout, TimeUnit unit) {
+        return getResultsUntilEnoughOrTimeout(keyT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnoughOrTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
+    public List<ResultT> getResultsUntilEnoughOrTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
         final List<ResultT> list = new ArrayList<>();
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
+        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, expectNum);
         startSearch(parameter, rootCanBeSearch);
         addResultToListWithTiming(list, parameter);
         return list;
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, timeout, unit, expectNum);
+    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
+        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, expectNum);
         startSearch(parameter, rootCanBeSearch);
         ArrayList<ResultT> list = putResultUntilOneTimeoutOrEnough(parameter);
         return list;
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) throws TimeoutException {
+    public List<ResultT> getResultsUntilEnough(KeyT keyT, int expectNum) throws TimeoutException {
         final List<ResultT> list = new ArrayList<>();
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearchT, MAX_WAIT_MILLI, TimeUnit.MILLISECONDS, expectNum);
+        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, MAX_WAIT_MILLI, TimeUnit.MILLISECONDS, expectNum);
         startSearch(parameter, rootCanBeSearch);
         addResultToListWithTimingThrowTimeoutException(list, parameter);
         return list;
     }
 
-    private SearchParameter createSearchRuleBeforeSearch(KeySearchT keySearchT, long timeout, TimeUnit unit, int exceptNum) {
+    private SearchParameter createSearchRuleBeforeSearch(KeyT keyT, long timeout, TimeUnit unit, int exceptNum) {
         SearchParameter parameter = new SearchParameter();
         BlockingQueue<ResultT> resultQueue = new LinkedBlockingDeque<>();
         ExecutorService searchService = Executors.newCachedThreadPool();
         long timeoutAfterCheck = ParameterUtil.preventTimeoutTooLong(timeout, unit);
 
-        parameter.setKeySearchT(keySearchT);
+        parameter.setKeySearchT(keyT);
         parameter.setResultQueue(resultQueue);
         parameter.setSearchService(searchService);
         parameter.setTimeout(timeoutAfterCheck);
@@ -94,16 +94,16 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
         return parameter;
     }
 
-    private void startSearch(SearchParameter parameter, List<CanBeSearchT> canBeSearchTList) {
-        canBeSearchTList.forEach(canBeSearchT -> {
+    private void startSearch(SearchParameter parameter, List<PathT> pathTList) {
+        pathTList.forEach(pathT -> {
             parameter.searchService.submit(() -> {
-                asyncSearch(canBeSearchT, parameter);
+                asyncSearch(pathT, parameter);
             });
         });
     }
 
-    private void asyncSearch(CanBeSearchT canBeSearchT, SearchParameter parameter) {
-        MessageOfSearched messageOfSearched = searchModel.search(parameter.keySearchT, canBeSearchT);
+    private void asyncSearch(PathT pathT, SearchParameter parameter) {
+        MessageOfSearched messageOfSearched = searchModel.search(parameter.keyT, pathT);
         putUsefulValueToQueue(parameter, messageOfSearched);
         executorCanBeSearch(parameter, messageOfSearched);
     }
@@ -130,7 +130,7 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
     }
 
     private void executorCanBeSearch(SearchParameter parameter, MessageOfSearched messageOfSearched) {
-        Optional<List<CanBeSearchT>> optional = messageOfSearched.getCanBeSearched();
+        Optional<List<PathT>> optional = messageOfSearched.getCanBeSearched();
         optional.ifPresent(list -> {
             list.forEach(search -> {
                 parameter.searchService.submit(() -> {
@@ -246,15 +246,15 @@ public class ConcurrentEntirelySearch<KeySearchT, ResultT, CanBeSearchT> impleme
     }
 
     private class SearchParameter {
-        public KeySearchT keySearchT;
+        public KeyT keyT;
         public long timeout;
         public int exceptNum;
         public TimeUnit unit = TimeUnit.MILLISECONDS;
         public BlockingQueue<ResultT> resultQueue;
         public ExecutorService searchService;
 
-        public void setKeySearchT(KeySearchT keySearchT) {
-            this.keySearchT = keySearchT;
+        public void setKeySearchT(KeyT keyT) {
+            this.keyT = keyT;
         }
 
         public void setResultQueue(BlockingQueue<ResultT> resultQueue) {
