@@ -1,276 +1,58 @@
 package com.Albert.searchImpl.boxSearchImpl;
 
-import com.Albert.pojo.MessageOfSearched;
 import com.Albert.search.boxSearch.EntirelySearch;
+import com.Albert.searchImpl.openSearchImpl.ConcurrentEntirelyOpenSearch;
 import com.Albert.searchModel.SearchModel;
-import com.Albert.utils.ParameterUtil;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Albert
  * @create 2018-02-09 14:22
  */
 public class ConcurrentEntirelySearch<KeyT, ResultT, PathT> implements EntirelySearch<KeyT, ResultT> {
-    private static final int NOT_LIMIT_EXPECT_NUM = 0;
-    private static final int NOT_HAVE_TIMEOUT = 0;
-    private static final long MAX_WAIT_MILLI = 3*1000*60;
-
-    private final SearchModel<KeyT, ResultT, PathT> searchModel;
     private final List<PathT> rootCanBeSearch;
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-    private final ExecutorService getService = Executors.newCachedThreadPool();
+    private final ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> openSearch;
 
-    public ConcurrentEntirelySearch(SearchModel<KeyT, ResultT, PathT> searchModel, List<PathT> rootCanBeSearch) {
-        this.searchModel = searchModel;
+    public ConcurrentEntirelySearch(List<PathT> rootCanBeSearch, SearchModel searchModel) {
         this.rootCanBeSearch = rootCanBeSearch;
+        this.openSearch = new ConcurrentEntirelyOpenSearch<>(searchModel);
     }
 
     @Override
     public ResultT getAResult(KeyT keySearch) {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keySearch, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, NOT_LIMIT_EXPECT_NUM);
-        startSearch(parameter, rootCanBeSearch);
-        ResultT resultT = getUtilHaveGot(parameter);
-        return resultT;
+        return openSearch.getAResult(rootCanBeSearch, keySearch);
     }
 
     @Override
     public ResultT getAResultUntilTimeout(KeyT keyT, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
-        startSearch(parameter, rootCanBeSearch);
-        shutdownSearchWhenTimeout(parameter);
-        ResultT resultT = getResultAndShutdownNowWhenHaveGot(parameter);
-        return resultT;
+        return openSearch.getAResultUntilTimeout(rootCanBeSearch, keyT, timeout, timeUnit);
     }
 
     @Override
     public List<ResultT> getResultsUntilOneTimeout(KeyT keyT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrOneTimeout(keyT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+        return openSearch.getResultsUntilOneTimeout(rootCanBeSearch, keyT, timeout, unit);
     }
 
     @Override
     public List<ResultT> getResultsUntilTimeout(KeyT keyT, long timeout, TimeUnit unit) {
-        return getResultsUntilEnoughOrTimeout(keyT, NOT_LIMIT_EXPECT_NUM, timeout, unit);
+        return openSearch.getResultsUntilTimeout(rootCanBeSearch, keyT, timeout, unit);
     }
 
     @Override
     public List<ResultT> getResultsUntilEnoughOrTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
-        final List<ResultT> list = new ArrayList<>();
-        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, expectNum);
-        startSearch(parameter, rootCanBeSearch);
-        addResultToListWithTiming(list, parameter);
-        return list;
+        return openSearch.getResultsUntilEnoughOrTimeout(rootCanBeSearch, keyT, timeout, unit, expectNum);
     }
 
     @Override
     public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
-        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, expectNum);
-        startSearch(parameter, rootCanBeSearch);
-        ArrayList<ResultT> list = putResultUntilOneTimeoutOrEnough(parameter);
-        return list;
+        return openSearch.getResultsUntilEnoughOrOneTimeout(rootCanBeSearch, keyT, timeout, unit, expectNum);
     }
 
     @Override
     public List<ResultT> getResultsUntilEnough(KeyT keyT, int expectNum) throws TimeoutException {
-        final List<ResultT> list = new ArrayList<>();
-        SearchParameter parameter = createSearchRuleBeforeSearch(keyT, MAX_WAIT_MILLI, TimeUnit.MILLISECONDS, expectNum);
-        startSearch(parameter, rootCanBeSearch);
-        addResultToListWithTimingThrowTimeoutException(list, parameter);
-        return list;
-    }
-
-    private SearchParameter createSearchRuleBeforeSearch(KeyT keyT, long timeout, TimeUnit unit, int exceptNum) {
-        SearchParameter parameter = new SearchParameter();
-        BlockingQueue<ResultT> resultQueue = new LinkedBlockingDeque<>();
-        ExecutorService searchService = Executors.newCachedThreadPool();
-        long timeoutAfterCheck = ParameterUtil.preventTimeoutTooLong(timeout, unit);
-
-        parameter.setKeySearchT(keyT);
-        parameter.setResultQueue(resultQueue);
-        parameter.setSearchService(searchService);
-        parameter.setTimeout(timeoutAfterCheck);
-        parameter.setExceptNum(exceptNum);
-        return parameter;
-    }
-
-    private void startSearch(SearchParameter parameter, List<PathT> pathTList) {
-        pathTList.forEach(pathT -> {
-            parameter.searchService.submit(() -> {
-                asyncSearch(pathT, parameter);
-            });
-        });
-    }
-
-    private void asyncSearch(PathT pathT, SearchParameter parameter) {
-        MessageOfSearched messageOfSearched = searchModel.search(parameter.keyT, pathT);
-        putUsefulValueToQueue(parameter, messageOfSearched);
-        executorCanBeSearch(parameter, messageOfSearched);
-    }
-
-    private ResultT getUtilHaveGot(SearchParameter parameter) {
-        ResultT resultT = null;
-        try {
-            resultT = parameter.resultQueue.take();
-            parameter.searchService.shutdownNow();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            return resultT;
-        }
-    }
-
-    private void putUsefulValueToQueue(SearchParameter parameter, MessageOfSearched messageOfSearched) {
-        Optional<List<ResultT>> resultOptional = messageOfSearched.getTrueResult();
-        resultOptional.ifPresent(resultList -> {
-            resultList.forEach(resultT -> {
-                parameter.resultQueue.add(resultT);
-            });
-        });
-    }
-
-    private void executorCanBeSearch(SearchParameter parameter, MessageOfSearched messageOfSearched) {
-        Optional<List<PathT>> optional = messageOfSearched.getCanBeSearched();
-        optional.ifPresent(list -> {
-            list.forEach(search -> {
-                parameter.searchService.submit(() -> {
-                    asyncSearch(search, parameter);
-                });
-            });
-        });
-    }
-
-    private void shutdownSearchWhenTimeout(SearchParameter parameter) {
-        scheduledExecutorService.schedule(() -> {
-            parameter.searchService.shutdownNow();
-        }, parameter.timeout, parameter.unit);
-    }
-
-    private ResultT getResultAndShutdownNowWhenHaveGot(SearchParameter parameter) {
-        ResultT resultT = null;
-        try {
-            resultT = parameter.resultQueue.poll(parameter.timeout, parameter.unit);
-            parameter.searchService.shutdownNow();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            return resultT;
-        }
-    }
-
-    private ArrayList<ResultT> putResultUntilOneTimeoutOrEnough(SearchParameter parameter) {
-        ArrayList<ResultT> list = new ArrayList<>();
-        boolean isNotTimeout = true;
-        boolean isNotEnough = true;
-        try {
-            while (isNotTimeout && isNotEnough) {
-                ResultT resultT = parameter.resultQueue.poll(parameter.timeout, parameter.unit);
-                if (Objects.nonNull(resultT)) {
-                    list.add(resultT);
-                    continue;
-                }
-                isNotTimeout = false;
-                isNotEnough = isEnough(parameter.exceptNum, list);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            parameter.searchService.shutdownNow();
-        }
-        return list;
-    }
-
-    private boolean isEnough(int exceptNum, List<ResultT> list) {
-        return exceptNum != 0 && list.size() >= exceptNum;
-    }
-
-    private void addResultToListWithTiming(List<ResultT> list, SearchParameter parameter) {
-        final Future<?> cancelFuture = submitAddResultToList(list, parameter);
-        timingCancel(parameter, cancelFuture);
-    }
-
-    private Future<?> submitAddResultToList(List<ResultT> list, SearchParameter parameter) {
-        return getService.submit(() -> {
-            boolean isNotEnough = true;
-            while (isNotEnough) {
-                ResultT result = takeResultFromQueue(parameter);
-                Optional.ofNullable(result).ifPresent(r -> list.add(r));
-                isNotEnough = !isEnough(parameter.exceptNum, list);
-            }
-        });
-    }
-
-    private void addResultToListWithTimingThrowTimeoutException(List<ResultT> list, SearchParameter parameter) throws TimeoutException {
-        final Future<?> cancelFuture = submitAddResultToList(list, parameter);
-        timingCancelThrowTimeoutException(parameter, cancelFuture);
-    }
-
-    private ResultT takeResultFromQueue(SearchParameter parameter) {
-        ResultT resultT = null;
-        try {
-            resultT = parameter.resultQueue.take();
-        } catch (InterruptedException e) {
-            System.out.println("The take method from queue is canceled");
-        }
-        return resultT;
-    }
-
-    private void timingCancel(SearchParameter parameter, Future<?> cancelFuture) {
-        try {
-            cancelFuture.get(parameter.timeout, parameter.unit);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-
-        } finally {
-            cancelFuture.cancel(true);
-            parameter.searchService.shutdownNow();
-        }
-    }
-
-    private void timingCancelThrowTimeoutException(SearchParameter parameter, Future<?> cancelFuture) throws TimeoutException {
-        try {
-            cancelFuture.get(parameter.timeout, parameter.unit);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            throw e;
-        } finally {
-            cancelFuture.cancel(true);
-            parameter.searchService.shutdownNow();
-        }
-    }
-
-    private class SearchParameter {
-        public KeyT keyT;
-        public long timeout;
-        public int exceptNum;
-        public TimeUnit unit = TimeUnit.MILLISECONDS;
-        public BlockingQueue<ResultT> resultQueue;
-        public ExecutorService searchService;
-
-        public void setKeySearchT(KeyT keyT) {
-            this.keyT = keyT;
-        }
-
-        public void setResultQueue(BlockingQueue<ResultT> resultQueue) {
-            this.resultQueue = resultQueue;
-        }
-
-        public void setSearchService(ExecutorService searchService) {
-            this.searchService = searchService;
-        }
-
-        public void setTimeout(long timeout) {
-            this.timeout = timeout;
-        }
-
-        public void setExceptNum(int exceptNum) {
-            this.exceptNum = exceptNum;
-        }
+        return openSearch.getResultsUntilEnough(rootCanBeSearch, keyT, expectNum);
     }
 }
