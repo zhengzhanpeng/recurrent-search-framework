@@ -20,7 +20,9 @@ public class App {
         List<String> rootSearch = new ArrayList<>();
         rootSearch.add("D:\\");
         EntirelySearch<String, File> search = new ConcurrentEntirelySearch(searchModel, rootSearch);
-        List<File> list = search.getResultsUntilEnoughOrOneTimeout("README.html", 1, 2, TimeUnit.MINUTES);
+
+        List<File> list = search.getResultsUntilEnoughOrOneTimeout("README.html", 3, 5, TimeUnit.SECONDS);
+
         System.out.println("------find size:" + list.size());
         list.forEach(file -> System.out.println(file.getPath()));
     }
