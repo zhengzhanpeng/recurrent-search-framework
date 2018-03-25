@@ -17,18 +17,18 @@ import java.util.concurrent.*;
  * @author Albert
  * @create 2018-02-03 21:12
  */
-public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> implements CacheEntirelySearch<KeySearchT, ResultT> {
+public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements CacheEntirelySearch<KeyT, ResultT> {
 
     private static final int NOT_LIMIT_EXPECT_NUM = 0;
     public static final int NOT_HAVE_TIMEOUT = 0;
 
-    private final SearchModel<KeySearchT, CanBeSearchedT> searchModel;
-    private final EfficientCacheCompute<KeySearchT, SoftReference<BlockingQueue<ResultT>>> cacheResults;
+    private final SearchModel<KeyT, PathT> searchModel;
+    private final EfficientCacheCompute<KeyT, SoftReference<BlockingQueue<ResultT>>> cacheResults;
     private final ExecutorService searchService;
     private final ExecutorService gitService;
-    private final List<CanBeSearchedT> rootCanBeSearched;
+    private final List<PathT> rootCanBeSearched;
 
-    public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<CanBeSearchedT> rootCanBeSearched) {
+    public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched) {
         this.searchModel = searchModel;
         this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(this::methodOfHowSearch);
         this.searchService = Executors.newCachedThreadPool();
@@ -36,7 +36,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
         this.rootCanBeSearched = rootCanBeSearched;
     }
 
-    private ConcurrentCacheEntirelySearch(SearchModel searchModel, List<CanBeSearchedT> rootCanBeSearched, ExecutorService searchService) {
+    private ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService) {
         this.searchModel = searchModel;
         this.searchService = searchService;
         this.rootCanBeSearched = rootCanBeSearched;
@@ -44,7 +44,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
         this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(this::methodOfHowSearch);
     }
 
-    public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<CanBeSearchedT> rootCanBeSearched, ExecutorService searchService, ExecutorService gitService) {
+    public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService, ExecutorService gitService) {
         this.searchModel = searchModel;
         this.searchService = searchService;
         this.gitService = gitService;
@@ -52,55 +52,55 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
         this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(this::methodOfHowSearch);
     }
 
-    public static <CanBeSearchedT> ConcurrentCacheEntirelySearch createHowAppointSearchExecutor(SearchModel searchModel, List<CanBeSearchedT> rootCanBeSearched, ExecutorService searchService) {
+    public static <PathT> ConcurrentCacheEntirelySearch createHowAppointSearchExecutor(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService) {
         return new ConcurrentCacheEntirelySearch(searchModel, rootCanBeSearched, searchService);
     }
 
-    public static <CanBeSearchedT> ConcurrentCacheEntirelySearch createHowAppointSearchExecutorAndGitExecutor(SearchModel searchModel, List<CanBeSearchedT> rootCanBeSearched, ExecutorService searchService, ExecutorService gitService) {
+    public static <PathT> ConcurrentCacheEntirelySearch createHowAppointSearchExecutorAndGitExecutor(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService, ExecutorService gitService) {
         return new ConcurrentCacheEntirelySearch(searchModel, rootCanBeSearched, searchService, gitService);
     }
 
-    private SoftReference<BlockingQueue<ResultT>> methodOfHowSearch(KeySearchT keySearch) {
+    private SoftReference<BlockingQueue<ResultT>> methodOfHowSearch(KeyT keySearch) {
         KeyAndResults keyAndResults = initParameter(keySearch);
         startAllSearch(keyAndResults, rootCanBeSearched);
         return new SoftReference<>(keyAndResults.results);
     }
 
-    private KeyAndResults initParameter(KeySearchT keySearch) {
+    private KeyAndResults initParameter(KeyT keySearch) {
         BlockingQueue<ResultT> results = new LinkedBlockingDeque<>();
         return new KeyAndResults(keySearch, results);
     }
 
-    private void startAllSearch(KeyAndResults keyAndResults, List<CanBeSearchedT> canBeSearched) {
+    private void startAllSearch(KeyAndResults keyAndResults, List<PathT> canBeSearched) {
         canBeSearched.stream().forEach(beSearched -> {
             asyncSearchOne(keyAndResults, beSearched);
         });
     }
 
-    private void asyncSearchOne(KeyAndResults keyAndResults, CanBeSearchedT canBeSearched) {
+    private void asyncSearchOne(KeyAndResults keyAndResults, PathT canBeSearched) {
         searchService.execute(() -> {
-            MessageOfSearched<ResultT, CanBeSearchedT> messageOfSearched = searchModel.search(keyAndResults.keySearch, canBeSearched);
+            MessageOfSearched<ResultT, PathT> messageOfSearched = searchModel.search(keyAndResults.keySearch, canBeSearched);
             saveSatisfyResultsIfExist(keyAndResults, messageOfSearched);
             continueSearchIfExist(keyAndResults, messageOfSearched);
         });
     }
 
-    private void saveSatisfyResultsIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, CanBeSearchedT> messageOfSearched) {
+    private void saveSatisfyResultsIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
         Optional<List<ResultT>> resultsOptional = messageOfSearched.getTrueResult();
         if (resultsOptional.isPresent()) {
             saveTrueResult(keyAndResults, resultsOptional);
         }
     }
 
-    private void continueSearchIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, CanBeSearchedT> messageOfSearched) {
-        Optional<List<CanBeSearchedT>> canBeSearchedOptional = messageOfSearched.getCanBeSearched();
+    private void continueSearchIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
+        Optional<List<PathT>> canBeSearchedOptional = messageOfSearched.getCanBeSearched();
         if (canBeSearchedOptional.isPresent()) {
             executeCanBeSearched(keyAndResults, canBeSearchedOptional);
         }
     }
-    private void executeCanBeSearched(KeyAndResults keyAndResults, Optional<List<CanBeSearchedT>> canBeSearchedOptional) {
-        List<CanBeSearchedT> canBeSearchedTs = canBeSearchedOptional.get();
-        startAllSearch(keyAndResults, canBeSearchedTs);
+    private void executeCanBeSearched(KeyAndResults keyAndResults, Optional<List<PathT>> canBeSearchedOptional) {
+        List<PathT> pathTS = canBeSearchedOptional.get();
+        startAllSearch(keyAndResults, pathTS);
     }
 
     private void saveTrueResult(KeyAndResults keyAndResults, Optional<List<ResultT>> resultsOptional) {
@@ -117,14 +117,14 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
         }
     }
 
-    private BlockingQueue<ResultT> getResultsBlockingQueue(KeySearchT keySearch) {
+    private BlockingQueue<ResultT> getResultsBlockingQueue(KeyT keySearch) {
         SoftReference<BlockingQueue<ResultT>> results = cacheResults.compute(keySearch);
         return results.get();
     }
 
     @Override
-    public List<ResultT> getResultsUntilOneTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keySearchT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
+    public List<ResultT> getResultsUntilOneTimeout(KeyT keyT, long timeout, TimeUnit unit) {
+        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
 
         List list = startGetResultsUntilOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
@@ -132,8 +132,8 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public List<ResultT> getResultsUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keySearchT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
+    public List<ResultT> getResultsUntilTimeout(KeyT keyT, long timeout, TimeUnit unit) {
+        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
 
         final List<ResultT> resultList = new ArrayList<>();
         Future timingCancelFuture = submitToAddResultToList(resultList, ruleParameter);
@@ -143,8 +143,8 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnoughOrTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keySearchT, timeout, unit, expectNum);
+    public List<ResultT> getResultsUntilEnoughOrTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
+        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, expectNum);
 
         final List<ResultT> resultList = new ArrayList<>();
         Future timingCancelFuture = startAddResultToListUntilEnough(resultList, ruleParameter);
@@ -154,16 +154,16 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnough(KeySearchT keySearchT, int expectNum) {
-        RuleParameter<ResultT> rule = createSearchRuleBeforeGetResult(keySearchT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, expectNum);
+    public List<ResultT> getResultsUntilEnough(KeyT keyT, int expectNum) {
+        RuleParameter<ResultT> rule = createSearchRuleBeforeGetResult(keyT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, expectNum);
         List<ResultT> list = startGetResultsUntilEnough(rule);
         unifyResultCache(rule, list);
         return list;
     }
 
     @Override
-    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeySearchT keySearchT, int expectNum, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keySearchT, timeout, unit, expectNum);
+    public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
+        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, expectNum);
 
         List list = startGetResultsUntilEnoughOrOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
@@ -171,7 +171,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public ResultT getAResult(KeySearchT keySearch) {
+    public ResultT getAResult(KeyT keySearch) {
         BlockingQueue<ResultT> resultTBlockingQueue = getResultsBlockingQueue(keySearch);
         ResultT resultT = takeOfQueueWithTryCatch(resultTBlockingQueue);
         unifyResultCache(resultT, resultTBlockingQueue);
@@ -179,16 +179,16 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     }
 
     @Override
-    public ResultT getAResultUntilTimeout(KeySearchT keySearchT, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        RuleParameter<ResultT> ruleParameter = createSearchRuleBeforeGetResult(keySearchT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
+    public ResultT getAResultUntilTimeout(KeyT keyT, long timeout, TimeUnit timeUnit) throws TimeoutException {
+        RuleParameter<ResultT> ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
 
         ResultT resultT = startGetAResultUntilTimeout(ruleParameter);
         unifyResultCache(resultT, ruleParameter.resultTBlockingQueue);
         return resultT;
     }
 
-    private RuleParameter createSearchRuleBeforeGetResult(KeySearchT keySearchT, long timeout, TimeUnit unit, int expectNum) {
-        BlockingQueue<ResultT> resultBlockingQueue = getResultsBlockingQueue(keySearchT);
+    private RuleParameter createSearchRuleBeforeGetResult(KeyT keyT, long timeout, TimeUnit unit, int expectNum) {
+        BlockingQueue<ResultT> resultBlockingQueue = getResultsBlockingQueue(keyT);
         long milliTimeout = preventTimeoutTooLong(timeout, unit);
         return getRuleParameter(milliTimeout, expectNum, resultBlockingQueue);
     }
@@ -353,9 +353,9 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
 
         final BlockingQueue<ResultT> results;
 
-        final KeySearchT keySearch;
+        final KeyT keySearch;
 
-        public KeyAndResults(KeySearchT keySearch, BlockingQueue<ResultT> results) {
+        public KeyAndResults(KeyT keySearch, BlockingQueue<ResultT> results) {
             this.results = results;
             this.keySearch = keySearch;
         }

@@ -1,6 +1,7 @@
 package com.Albert.searchModel;
 
 import com.Albert.pojo.MessageOfSearched;
+import com.Albert.utils.RunEnvironmentUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,27 +17,27 @@ class DesktopSearchModelTest {
 
     @BeforeAll
     static void initCreateFileOfTest() throws IOException {
-        File dirFile = new File("D://dirBeUsedTest");
+        File dirFile = new File(RunEnvironmentUtil.locationBeUse);
         dirFile.mkdir();
-        File readMeFile = new File("D://dirBeUsedTest/fileOfBeUsedTest.txt");
+        File readMeFile = new File(RunEnvironmentUtil.locationBeUse + "/fileOfBeUsedTest.txt");
         readMeFile.createNewFile();
-        File beUsedDeleteFile = new File("D://dirBeUsedTest/fileOfBeUsedDelete.txt");
+        File beUsedDeleteFile = new File(RunEnvironmentUtil.locationBeUse + "/fileOfBeUsedDelete.txt");
         beUsedDeleteFile.createNewFile();
     }
 
     @AfterAll
     static void deleteFileOfTest() {
-        File readMeFile = new File("D://dirBeUsedTest/fileOfBeUsedTest.txt");
+        File readMeFile = new File(RunEnvironmentUtil.locationBeUse + "/fileOfBeUsedTest.txt");
         readMeFile.delete();
-        File beUsedDeleteFile = new File("D://dirBeUsedTest/fileOfBeUsedDelete.txt");
+        File beUsedDeleteFile = new File(RunEnvironmentUtil.locationBeUse + "/fileOfBeUsedDelete.txt");
         beUsedDeleteFile.delete();
-        File dirFile = new File("D://dirBeUsedTest");
+        File dirFile = new File(RunEnvironmentUtil.locationBeUse + "");
         dirFile.delete();
     }
 
     @Test
     void search() {
-        MessageOfSearched<File, String> messageOfSearched = desktopSearchModel.search("fileOfBeUsedTest", "D:\\dirBeUsedTest");
+        MessageOfSearched<File, String> messageOfSearched = desktopSearchModel.search("fileOfBeUsedTest", RunEnvironmentUtil.locationBeUse + "");
         Optional<List<File>> optionalFile = messageOfSearched.getTrueResult();
         List<File> list = optionalFile.get();
         Assertions.assertNotNull(list);
@@ -45,7 +46,7 @@ class DesktopSearchModelTest {
 
     @Test
     void remove() {
-        File file = new File("D:\\dirBeUsedTest/fileOfBeUsedDelete.txt");
+        File file = new File(RunEnvironmentUtil.locationBeUse + "/fileOfBeUsedDelete.txt");
         boolean result = file.delete();
         Assertions.assertEquals(true, result);
         createNewFile(file);
@@ -61,7 +62,7 @@ class DesktopSearchModelTest {
 
     @Test
     void add() {
-        File file = new File("D:\\dirBeUsedTest/test");
+        File file = new File(RunEnvironmentUtil.locationBeUse + "/test");
         boolean result = file.isFile();
         Assertions.assertEquals(false, result);
         desktopSearchModel.add(file);
@@ -72,7 +73,7 @@ class DesktopSearchModelTest {
 
     @Test
     void isTrueObject() {
-        File file = new File("D:\\dirBeUsedTest/fileOfBeUsedTest.txt");
+        File file = new File(RunEnvironmentUtil.locationBeUse + "/fileOfBeUsedTest.txt");
         String keySearch = "fileOf";
         boolean result = desktopSearchModel.isTrueObject(keySearch, file);
         Assertions.assertEquals(true, result);
