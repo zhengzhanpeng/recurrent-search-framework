@@ -7,7 +7,7 @@ import com.Albert.search.boxSearch.CacheEntirelySearch;
 import com.Albert.searchModel.SearchModel;
 import com.Albert.utils.ParameterUtil;
 
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +23,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     public static final int NOT_HAVE_TIMEOUT = 0;
 
     private final SearchModel<KeyT, PathT> searchModel;
-    private final EfficientCacheCompute<KeyT, SoftReference<BlockingQueue<ResultT>>> cacheResults;
+    private final EfficientCacheCompute<KeyT, WeakReference<BlockingQueue<ResultT>>> cacheResults;
     private final ExecutorService searchService;
     private final ExecutorService gitService;
     private final List<PathT> rootCanBeSearched;
@@ -60,10 +60,10 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         return new ConcurrentCacheEntirelySearch(searchModel, rootCanBeSearched, searchService, gitService);
     }
 
-    private SoftReference<BlockingQueue<ResultT>> methodOfHowSearch(KeyT keySearch) {
+    private WeakReference<BlockingQueue<ResultT>> methodOfHowSearch(KeyT keySearch) {
         KeyAndResults keyAndResults = initParameter(keySearch);
         startAllSearch(keyAndResults, rootCanBeSearched);
-        return new SoftReference<>(keyAndResults.results);
+        return new WeakReference<>(keyAndResults.results);
     }
 
     private KeyAndResults initParameter(KeyT keySearch) {
@@ -118,7 +118,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     }
 
     private BlockingQueue<ResultT> getResultsBlockingQueue(KeyT keySearch) {
-        SoftReference<BlockingQueue<ResultT>> results = cacheResults.compute(keySearch);
+        WeakReference<BlockingQueue<ResultT>> results = cacheResults.compute(keySearch);
         return results.get();
     }
 
