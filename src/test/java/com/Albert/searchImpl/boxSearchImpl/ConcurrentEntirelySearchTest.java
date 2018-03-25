@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
 import static java.time.Duration.ofMillis;
 
 class ConcurrentEntirelySearchTest {
-    final ConcurrentEntirelySearch<String, File, String> searchService = new ConcurrentEntirelySearch<>(RunEnvironmentUtil.rootCanBeSearched, RunEnvironmentUtil.searchModel);
+    final ConcurrentEntirelySearch<String, File, String> searchService = new ConcurrentEntirelySearch<>(RunEnvironmentUtil.searchModel, RunEnvironmentUtil.rootCanBeSearched);
     private final String key = "README";
     private final String keyNotExist = "SDFSDFSDF.SDFSF";
 

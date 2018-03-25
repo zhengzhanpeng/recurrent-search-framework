@@ -16,7 +16,7 @@ public class ConcurrentEntirelySearch<KeyT, ResultT, PathT> implements EntirelyS
     private final List<PathT> rootCanBeSearch;
     private final ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> openSearch;
 
-    public ConcurrentEntirelySearch(List<PathT> rootCanBeSearch, SearchModel searchModel) {
+    public ConcurrentEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearch) {
         this.rootCanBeSearch = rootCanBeSearch;
         this.openSearch = new ConcurrentEntirelyOpenSearch<>(searchModel);
     }
