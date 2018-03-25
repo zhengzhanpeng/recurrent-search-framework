@@ -16,7 +16,7 @@ import static java.time.Duration.ofMillis;
 
 class ConcurrentCacheEntirelySearchTest {
     final SearchModel searchModel = new DesktopSearchModel();
-    final String[] fileNames = {"D://dirBeUsedTest"};
+    final String[] fileNames = {RunEnvironmentUtil.locationBeUse};
     ConcurrentCacheEntirelySearch<String, File, String> concurrentCacheEntirelyOperator = null;
     private static final long ERROR_RANGE = 100;
 
@@ -49,7 +49,7 @@ class ConcurrentCacheEntirelySearchTest {
         Assertions.assertEquals(true, concurrentCacheEntirelyOperator.isEmpty());
     }
 
-    @RepeatedTest(2)
+    @Test
     void testGetResultsUntilGitOneTimeout() {
         long startTime = System.currentTimeMillis();
         String keyCanNotExist = "sdlfksdlfksd.sdfsd";
@@ -60,7 +60,7 @@ class ConcurrentCacheEntirelySearchTest {
         Assertions.assertTrue(runTime >= timeout);
     }
 
-    @RepeatedTest(2)
+    @Test
     void getResultsUntilTimeout() {
         long startTime = System.currentTimeMillis();
         String keyCanNotExist = "sdlfksdlfksd.sdfsd";
@@ -71,7 +71,7 @@ class ConcurrentCacheEntirelySearchTest {
         Assertions.assertTrue(runTime >= timeout);
     }
 
-    @RepeatedTest(2)
+    @Test
     void getResultsUntilEnoughOrTimeout() {
         String keyExist = "README";
         int expectNum = 1;
@@ -101,7 +101,7 @@ class ConcurrentCacheEntirelySearchTest {
         return runTime > timeout && notEnough;
     }
 
-    @RepeatedTest(2)
+    @Test
     public void getResultsUntilEnoughOrOneTimeout() {
         String keyExist = "README";
         int expectNum = 1;
@@ -122,7 +122,7 @@ class ConcurrentCacheEntirelySearchTest {
         Assertions.assertTrue(isTimeoutAndNotEnough(expectNum, list, runTime, timeout));
     }
 
-    @RepeatedTest(2)
+    @Test
     public void testGetAResult() {
         String key = "README";
         File file = concurrentCacheEntirelyOperator.getAResult(key);
@@ -131,7 +131,7 @@ class ConcurrentCacheEntirelySearchTest {
         Assertions.assertTrue(name.contains(key));
     }
 
-    @RepeatedTest(2)
+    @Test
     public void testGetResultsUntilEnough() {
         String key = "README";
         List<File> list = concurrentCacheEntirelyOperator.getResultsUntilEnough(key, 1);

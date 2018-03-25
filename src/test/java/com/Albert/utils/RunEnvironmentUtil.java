@@ -13,25 +13,30 @@ import java.util.List;
  * @create 2018-03-02 3:19 PM
  */
 public class RunEnvironmentUtil {
-    public final static SearchModel searchModel = new DesktopSearchModel();
-    public final static String[] fileNames = {"D://dirBeUsedTest"};
-    public final static List<String> rootCanBeSearched = Arrays.asList(fileNames);
+    private static final String locationForWindows = "D://dirBeUsedTest";
+    private static final String locationForMac = "/Users";
+
+    public static final String locationBeUse = locationForMac;
+
+    public static final SearchModel searchModel = new DesktopSearchModel();
+    public static final String[] fileNames = {locationBeUse};
+    public static final List<String> rootCanBeSearched = Arrays.asList(fileNames);
 
     public static void runBefore() throws IOException {
-        File dirFile = new File("D://dirBeUsedTest");
+        File dirFile = new File(locationBeUse);
         dirFile.mkdir();
-        File readMeFile = new File("D://dirBeUsedTest/README.md");
+        File readMeFile = new File(locationBeUse + "/README.md");
         readMeFile.createNewFile();
-        File beUsedDeleteFile = new File("D://dirBeUsedTest/delete.md");
+        File beUsedDeleteFile = new File(locationBeUse + "/delete.md");
         beUsedDeleteFile.createNewFile();
     }
 
     public static void runAfter() {
-        File readMeFile = new File("D://dirBeUsedTest/README.md");
+        File readMeFile = new File(locationBeUse + "/README.md");
         readMeFile.delete();
-        File beUsedDeleteFile = new File("D://dirBeUsedTest/delete.md");
+        File beUsedDeleteFile = new File(locationBeUse + "/delete.md");
         beUsedDeleteFile.delete();
-        File dirFile = new File("D://dirBeUsedTest");
+        File dirFile = new File(locationBeUse);
         dirFile.delete();
     }
 }
