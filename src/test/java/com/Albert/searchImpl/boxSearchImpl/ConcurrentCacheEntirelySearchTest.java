@@ -102,7 +102,7 @@ class ConcurrentCacheEntirelySearchTest {
     }
 
     @Test
-    public void getResultsUntilEnoughOrOneTimeout() {
+    void getResultsUntilEnoughOrOneTimeout() {
         String keyExist = "README";
         int expectNum = 1;
         int timeout = 1000 * 3;
@@ -123,7 +123,7 @@ class ConcurrentCacheEntirelySearchTest {
     }
 
     @Test
-    public void testGetAResult() {
+    void testGetAResult() {
         String key = "README";
         File file = concurrentCacheEntirelyOperator.getAResult(key);
         Assertions.assertNotNull(file);
@@ -132,14 +132,14 @@ class ConcurrentCacheEntirelySearchTest {
     }
 
     @Test
-    public void testGetResultsUntilEnough() {
+    void testGetResultsUntilEnough() {
         String key = "README";
         List<File> list = concurrentCacheEntirelyOperator.getResultsUntilEnough(key, 1);
         Assertions.assertTrue(list.size() == 1);
     }
 
     @Test
-    public void testGetAResultUntilTimeout() {
+    void testGetAResultUntilTimeout() {
         String key = "README";
         File file = getFileWithTryCatch(key);
         Assertions.assertTrue(file != null);
