@@ -21,11 +21,11 @@ public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements Entir
     private static final int NOT_HAVE_TIMEOUT = 0;
     private static final long MAX_WAIT_MILLI = 3*1000*60;
 
-    private final SearchModel<KeyT, ResultT, PathT> searchModel;
+    private final SearchModel<KeyT, PathT> searchModel;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     private final ExecutorService getService = Executors.newCachedThreadPool();
 
-    public ConcurrentEntirelyOpenSearch(SearchModel<KeyT, ResultT, PathT> searchModel) {
+    public ConcurrentEntirelyOpenSearch(SearchModel searchModel) {
         this.searchModel = searchModel;
     }
 

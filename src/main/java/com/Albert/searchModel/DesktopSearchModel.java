@@ -13,14 +13,14 @@ import java.util.stream.Collectors;
  * @author Albert
  * @create 2018-02-03 20:17
  */
-public class DesktopSearchModel implements SearchModel<String, File, String> {
+public class DesktopSearchModel implements SearchModel<String, String> {
 
     @Override
-    public MessageOfSearched<File, String> search(String keySearch, String canBeSearched) {
-        File[] childFiles = getAllChildFile(canBeSearched);
-        List<File> trueResults  = getTrueResults(keySearch, childFiles);
-        List<String> canBeSearcheds = getCanBeSearcheds(childFiles);
-        MessageOfSearched messageOfSearched = new MessageOfSearched(trueResults, canBeSearcheds);
+    public MessageOfSearched search(String key, String path) {
+        File[] childFiles = getAllChildFile(path);
+        List<File> trueResults  = getTrueResults(key, childFiles);
+        List<String> paths = getPaths(childFiles);
+        MessageOfSearched messageOfSearched = new MessageOfSearched(trueResults, paths);
         return messageOfSearched;
     }
 
@@ -37,7 +37,7 @@ public class DesktopSearchModel implements SearchModel<String, File, String> {
                 .filter(objectOfTest -> isTrueObject(keySearch, objectOfTest)).collect(Collectors.toList());
     }
 
-    private List<String> getCanBeSearcheds(File[] childFiles) {
+    private List<String> getPaths(File[] childFiles) {
         if (childFiles == null) {
             return new ArrayList<>();
         }

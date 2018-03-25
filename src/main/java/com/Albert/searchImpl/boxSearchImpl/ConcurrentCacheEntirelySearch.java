@@ -22,7 +22,7 @@ public class ConcurrentCacheEntirelySearch<KeySearchT, ResultT, CanBeSearchedT> 
     private static final int NOT_LIMIT_EXPECT_NUM = 0;
     public static final int NOT_HAVE_TIMEOUT = 0;
 
-    private final SearchModel<KeySearchT, ResultT, CanBeSearchedT> searchModel;
+    private final SearchModel<KeySearchT, CanBeSearchedT> searchModel;
     private final EfficientCacheCompute<KeySearchT, SoftReference<BlockingQueue<ResultT>>> cacheResults;
     private final ExecutorService searchService;
     private final ExecutorService gitService;
