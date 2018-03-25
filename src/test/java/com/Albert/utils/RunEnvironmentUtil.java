@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class RunEnvironmentUtil {
     private static final String locationForWindows = "D://dirBeUsedTest";
-    private static final String locationForMac = "/Users";
+    private static final String locationForMac = "/Users/test";
 
     public static final String locationBeUse = locationForMac;
 
