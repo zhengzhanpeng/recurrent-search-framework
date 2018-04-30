@@ -24,7 +24,6 @@ import java.util.concurrent.Future;
 
 /**
  * @author Albert
- * @create 2018-01-10 19:26
  */
 public interface Compute<KeyT, ResultT> {
 

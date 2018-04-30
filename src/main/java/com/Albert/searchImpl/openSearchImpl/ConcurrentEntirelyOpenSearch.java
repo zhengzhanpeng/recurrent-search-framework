@@ -13,7 +13,6 @@ import java.util.concurrent.*;
 
 /**
  * @author Albert
- * @create 2018-03-12 9:25
  */
 public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements EntirelyOpenSearch<KeyT, ResultT, PathT> {
 

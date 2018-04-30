@@ -6,7 +6,6 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * @author Albert
- * @create 2018-03-11 14:10
  */
 public interface EntirelyOpenSearch<KeyT, ResultT, PathT> extends OpenSearch<KeyT, ResultT, PathT> {
     List<ResultT> getResultsUntilTimeout(List<PathT> pathList, KeyT keyT, long timeout, TimeUnit unit);

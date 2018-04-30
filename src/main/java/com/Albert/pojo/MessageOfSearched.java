@@ -5,7 +5,6 @@ import java.util.Optional;
 
 /**
  * @author Albert
- * @create 2018-02-03 20:54
  */
 public class MessageOfSearched<TrueT, CanBeSearchedT> {
     private final List<TrueT> trueResult;

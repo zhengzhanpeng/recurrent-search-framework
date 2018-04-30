@@ -24,7 +24,6 @@ import java.util.function.Function;
 
 /**
  * @author Albert
- * @create 2018-01-10 19:44
  */
 public class EfficientCacheCompute<KeyT, ResultT> implements Compute<KeyT, ResultT> {
     private final boolean IS_NOT_RETURN = true;

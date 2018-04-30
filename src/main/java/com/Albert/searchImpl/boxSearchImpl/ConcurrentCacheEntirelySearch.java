@@ -15,7 +15,6 @@ import java.util.concurrent.*;
 
 /**
  * @author Albert
- * @create 2018-02-03 21:12
  */
 public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements CacheEntirelySearch<KeyT, ResultT> {
 

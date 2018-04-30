@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author Albert
- * @create 2018-02-09 14:10
  */
 public class RuleParameter<ResultT> {
     public final BlockingQueue<ResultT> resultTBlockingQueue;

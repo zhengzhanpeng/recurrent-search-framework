@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author Albert
- * @create 2018-02-08 20:09
  */
 public class App {
     public static void main(String[] args) {

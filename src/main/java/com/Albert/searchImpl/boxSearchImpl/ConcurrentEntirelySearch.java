@@ -10,7 +10,6 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * @author Albert
- * @create 2018-02-09 14:22
  */
 public class ConcurrentEntirelySearch<KeyT, ResultT, PathT> implements EntirelySearch<KeyT, ResultT> {
     private final List<PathT> rootCanBeSearch;

@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 /**
  * @author Albert
- * @create 2018-02-03 20:17
  */
 public class DesktopSearchModel implements SearchModel<String, String> {
 

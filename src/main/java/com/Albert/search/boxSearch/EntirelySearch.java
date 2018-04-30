@@ -6,7 +6,6 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * @author Albert
- * @create 2018-02-08 16:53
  */
 public interface EntirelySearch<KeyT, ResultT> extends Search<KeyT, ResultT> {
     List<ResultT> getResultsUntilOneTimeout(KeyT keyT, long timeout, TimeUnit unit);

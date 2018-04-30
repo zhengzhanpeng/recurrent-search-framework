@@ -8,8 +8,8 @@
         <artifactId>oss-parent</artifactId>
         <version>7</version>
     </parent>
-    <groupId>climb_search_framework</groupId>
-    <artifactId>climb_search_framework</artifactId>
+    <groupId>com.github.zhengzhanpeng</groupId>
+    <artifactId>recurrent_search_framework</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -33,14 +33,14 @@
     <scm>
         <tag>master</tag>
         <url>git@github.com:cloudnil/marathon-client.git</url>
-        <connection>scm:git:git@github.com:cloudnil/marathon-client.git</connection>
-        <developerConnection>scm:git:git@github.com:cloudnil/marathon-client.git</developerConnection>
+        <connection>scm:git:git@github.com:zhengzhanpeng/recurrent-search-framework.git</connection>
+        <developerConnection>scm:git:git@github.com:zhengzhanpeng/recurrent-search-framework.git</developerConnection>
     </scm>
     <developers>
         <developer>
-            <name>cloudnil</name>
-            <email>cloudnil@126.com</email>
-            <organization>CloudNil</organization>
+            <name>ZhengZhanpeng</name>
+            <email>p6621998@gmail.com</email>
+            <organization>ZhengZhanpeng</organization>
         </developer>
     </developers>
 

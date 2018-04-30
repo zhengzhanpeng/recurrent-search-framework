@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * @author Albert
- * @create 2018-03-02 3:19 PM
  */
 public class RunEnvironmentUtil {
     private static final String locationForWindows = "D://dirBeUsedTest";
