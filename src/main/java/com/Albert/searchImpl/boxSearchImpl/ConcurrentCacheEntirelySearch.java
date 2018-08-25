@@ -32,7 +32,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     @Override
     public List<ResultT> getResultsUntilOneTimeout(KeyT keyT, long timeout, TimeUnit unit) {
         RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
-        List list = startGetResultsUntilOneTimeout(ruleParameter);
+        List list = getResultsUntilOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
         return list;
     }
@@ -103,7 +103,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         return new RuleParameter(resultBlockingQueue, milliTimeout, expectNum);
     }
 
-    private List<ResultT> startGetResultsUntilOneTimeout(RuleParameter ruleParameter) {
+    private List<ResultT> getResultsUntilOneTimeout(RuleParameter ruleParameter) {
         List<ResultT> list = new ArrayList<>();
         while (true) {
             ResultT result = (ResultT) getResult(ruleParameter);
@@ -115,12 +115,6 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         return list;
     }
 
-    private void unifyResultCache(RuleParameter ruleParameter, List list) {
-        list.stream().forEach(result -> {
-            ruleParameter.resultTBlockingQueue.offer(result);
-        });
-    }
-
     private ResultT getResult(RuleParameter<ResultT> rule) {
         ResultT result = null;
         try {
@@ -129,6 +123,10 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
             e.printStackTrace();
         }
         return result;
+    }
+
+    private void unifyResultCache(RuleParameter ruleParameter, List list) {
+        list.forEach(result -> ruleParameter.resultTBlockingQueue.offer(result));
     }
 
     private void startTimingCancel(Future timingCancelFuture, RuleParameter rule) {
