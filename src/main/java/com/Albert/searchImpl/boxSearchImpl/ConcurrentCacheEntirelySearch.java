@@ -1,7 +1,6 @@
 package com.Albert.searchImpl.boxSearchImpl;
 
 import com.Albert.cache.EfficientCacheCompute;
-import com.Albert.pojo.MessageOfSearched;
 import com.Albert.pojo.RuleParameter;
 import com.Albert.search.boxSearch.CacheEntirelySearch;
 import com.Albert.searchModel.SearchModel;
@@ -10,7 +9,6 @@ import com.Albert.utils.ParameterUtil;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
 
 /**
@@ -21,96 +19,14 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     private static final int NOT_LIMIT_EXPECT_NUM = 0;
     public static final int NOT_HAVE_TIMEOUT = 0;
 
-    private final SearchModel<KeyT, PathT> searchModel;
     private final EfficientCacheCompute<KeyT, WeakReference<BlockingQueue<ResultT>>> cacheResults;
-    private final ExecutorService searchService;
     private final ExecutorService gitService;
-    private final List<PathT> rootCanBeSearched;
+    private final SearchMethod<KeyT, ResultT, PathT> searchMethod;
 
     public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched) {
-        this.searchModel = searchModel;
-        this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(this::methodOfHowSearch);
-        this.searchService = Executors.newCachedThreadPool();
+        searchMethod = SearchMethod.createSearchMethod(searchModel, rootCanBeSearched);
+        this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(searchMethod::methodOfHowSearch);
         this.gitService = Executors.newCachedThreadPool();
-        this.rootCanBeSearched = rootCanBeSearched;
-    }
-
-    private ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService) {
-        this.searchModel = searchModel;
-        this.searchService = searchService;
-        this.rootCanBeSearched = rootCanBeSearched;
-        this.gitService = Executors.newCachedThreadPool();
-        this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(this::methodOfHowSearch);
-    }
-
-    public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService, ExecutorService gitService) {
-        this.searchModel = searchModel;
-        this.searchService = searchService;
-        this.gitService = gitService;
-        this.rootCanBeSearched = rootCanBeSearched;
-        this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(this::methodOfHowSearch);
-    }
-
-    public static <PathT> ConcurrentCacheEntirelySearch createHowAppointSearchExecutor(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService) {
-        return new ConcurrentCacheEntirelySearch(searchModel, rootCanBeSearched, searchService);
-    }
-
-    public static <PathT> ConcurrentCacheEntirelySearch createHowAppointSearchExecutorAndGitExecutor(SearchModel searchModel, List<PathT> rootCanBeSearched, ExecutorService searchService, ExecutorService gitService) {
-        return new ConcurrentCacheEntirelySearch(searchModel, rootCanBeSearched, searchService, gitService);
-    }
-
-    private WeakReference<BlockingQueue<ResultT>> methodOfHowSearch(KeyT keySearch) {
-        KeyAndResults keyAndResults = initParameter(keySearch);
-        startAllSearch(keyAndResults, rootCanBeSearched);
-        return new WeakReference<>(keyAndResults.results);
-    }
-
-    private KeyAndResults initParameter(KeyT keySearch) {
-        BlockingQueue<ResultT> results = new LinkedBlockingDeque<>();
-        return new KeyAndResults(keySearch, results);
-    }
-
-    private void startAllSearch(KeyAndResults keyAndResults, List<PathT> canBeSearched) {
-        canBeSearched.stream().forEach(beSearched -> {
-            asyncSearchOne(keyAndResults, beSearched);
-        });
-    }
-
-    private void asyncSearchOne(KeyAndResults keyAndResults, PathT canBeSearched) {
-        searchService.execute(() -> {
-            MessageOfSearched<ResultT, PathT> messageOfSearched = searchModel.search(keyAndResults.keySearch, canBeSearched);
-            saveSatisfyResultsIfExist(keyAndResults, messageOfSearched);
-            continueSearchIfExist(keyAndResults, messageOfSearched);
-        });
-    }
-
-    private void saveSatisfyResultsIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
-        messageOfSearched.getTrueResult()
-                         .ifPresent(currentResults -> {
-                             for (ResultT trueResult : currentResults) {
-                                 saveAResult(keyAndResults, trueResult);
-                             }
-                         });
-    }
-
-    private void continueSearchIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
-        Optional<List<PathT>> canBeSearchedOptional = messageOfSearched.getCanBeSearched();
-        if (canBeSearchedOptional.isPresent()) {
-            executeCanBeSearched(keyAndResults, canBeSearchedOptional);
-        }
-    }
-
-    private void executeCanBeSearched(KeyAndResults keyAndResults, Optional<List<PathT>> canBeSearchedOptional) {
-        List<PathT> pathTS = canBeSearchedOptional.get();
-        startAllSearch(keyAndResults, pathTS);
-    }
-
-    private void saveAResult(KeyAndResults keyAndResults, ResultT trueResult) {
-        try {
-            keyAndResults.results.put(trueResult);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private BlockingQueue<ResultT> getResultsBlockingQueue(KeyT keySearch) {
@@ -209,7 +125,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     }
 
     private boolean addToListUntilOneTimeout(List<ResultT> list, RuleParameter<ResultT> rule) {
-        ResultT result = null;
+        ResultT result;
         try {
             result = rule.resultTBlockingQueue.poll(rule.milliTimeout, rule.unit);
         } catch (InterruptedException e) {
@@ -338,11 +254,11 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     }
 
     public void stopSearch() {
-        searchService.shutdown();
+        searchMethod.stopSearch();
     }
 
     public void stopSearchNow() {
-        searchService.shutdownNow();
+        searchMethod.stopSearchNow();
     }
 
     private class KeyAndResults {
