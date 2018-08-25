@@ -261,25 +261,6 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         searchMethod.stopSearchNow();
     }
 
-    private class KeyAndResults {
-
-        final BlockingQueue<ResultT> results;
-
-        final KeyT keySearch;
-
-        public KeyAndResults(KeyT keySearch, BlockingQueue<ResultT> results) {
-            this.results = results;
-            this.keySearch = keySearch;
-        }
-
-    }
-
-    private void clearCacheIfTrue(boolean result) {
-        if (result) {
-            clearCache();
-        }
-    }
-
     private RuleParameter getRuleParameter(long milliTimeout, int expectNum, BlockingQueue resultQueue) {
         RuleParameter<ResultT> ruleParameter = new RuleParameter(resultQueue, milliTimeout, expectNum);
         return ruleParameter;
