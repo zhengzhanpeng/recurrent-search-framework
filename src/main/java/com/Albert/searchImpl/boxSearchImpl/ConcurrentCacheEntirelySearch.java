@@ -82,7 +82,6 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     @Override
     public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
         RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, expectNum);
-
         List list = startGetResultsUntilEnoughOrOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
         return list;
@@ -157,7 +156,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     }
 
     private boolean addToListUntilEnoughOrOneTimeout(List<ResultT> list, RuleParameter<ResultT> rule) {
-        ResultT result;
+        ResultT result = null;
         if (list.size() >= rule.expectNum) {
             return false;
         }
@@ -165,13 +164,11 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
             result = rule.resultTBlockingQueue.poll(rule.milliTimeout, rule.unit);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+        if (result == null) {
             return false;
         }
-        if (result != null) {
-            list.add(result);
-        } else {
-            return false;
-        }
+        list.add(result);
         return true;
     }
 
