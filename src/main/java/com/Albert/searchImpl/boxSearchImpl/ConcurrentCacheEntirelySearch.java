@@ -85,10 +85,12 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     }
 
     private void saveSatisfyResultsIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
-        Optional<List<ResultT>> resultsOptional = messageOfSearched.getTrueResult();
-        if (resultsOptional.isPresent()) {
-            saveTrueResult(keyAndResults, resultsOptional);
-        }
+        messageOfSearched.getTrueResult()
+                         .ifPresent(currentResults -> {
+                             for (ResultT trueResult : currentResults) {
+                                 saveAResult(keyAndResults, trueResult);
+                             }
+                         });
     }
 
     private void continueSearchIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
@@ -97,17 +99,12 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
             executeCanBeSearched(keyAndResults, canBeSearchedOptional);
         }
     }
+
     private void executeCanBeSearched(KeyAndResults keyAndResults, Optional<List<PathT>> canBeSearchedOptional) {
         List<PathT> pathTS = canBeSearchedOptional.get();
         startAllSearch(keyAndResults, pathTS);
     }
 
-    private void saveTrueResult(KeyAndResults keyAndResults, Optional<List<ResultT>> resultsOptional) {
-        List<ResultT> currentResults = resultsOptional.get();
-        for (ResultT trueResult : currentResults) {
-            saveAResult(keyAndResults, trueResult);
-        }
-    }
     private void saveAResult(KeyAndResults keyAndResults, ResultT trueResult) {
         try {
             keyAndResults.results.put(trueResult);
@@ -255,7 +252,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     private Future startAddResultToListUntilEnough(List<ResultT> resultList, RuleParameter<ResultT> rule) {
         return gitService.submit(() -> {
-            for(int i = 0; i < rule.expectNum; i++) {
+            for (int i = 0; i < rule.expectNum; i++) {
                 try {
                     ResultT resultT = rule.resultTBlockingQueue.take();
                     resultList.add(resultT);
@@ -320,7 +317,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     private ResultT startGetAResultUntilTimeout(RuleParameter<ResultT> ruleParameter) {
         List<ResultT> saveResult = new ArrayList<>();
         Future future = gitService.submit(() -> {
-            ResultT resultT =takeOfQueueWithTryCatch(ruleParameter.resultTBlockingQueue);
+            ResultT resultT = takeOfQueueWithTryCatch(ruleParameter.resultTBlockingQueue);
             saveResult.add(resultT);
         });
         startTimingCancel(future, ruleParameter);
