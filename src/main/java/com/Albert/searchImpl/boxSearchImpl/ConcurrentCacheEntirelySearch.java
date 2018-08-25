@@ -71,9 +71,12 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     @Override
     public List<ResultT> getResultsUntilEnough(KeyT keyT, int expectNum) {
         RuleParameter<ResultT> rule = createSearchRule(keyT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, expectNum);
-        List<ResultT> list = startGetResultsUntilEnough(rule);
-        unifyResultCache(rule, list);
-        return list;
+        List<ResultT> resultList = new ArrayList<>();
+        while (resultList.size() < rule.expectNum) {
+            resultList.add(takeOfQueueWithTryCatch(rule.resultTBlockingQueue));
+        }
+        unifyResultCache(rule, resultList);
+        return resultList;
     }
 
     @Override
@@ -170,16 +173,6 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
             return false;
         }
         return true;
-    }
-
-    private List<ResultT> startGetResultsUntilEnough(RuleParameter<ResultT> rule) {
-        List<ResultT> list = new ArrayList<>();
-        ResultT resultT;
-        while (list.size() < rule.expectNum) {
-            resultT = takeOfQueueWithTryCatch(rule.resultTBlockingQueue);
-            list.add(resultT);
-        }
-        return list;
     }
 
     private ResultT takeOfQueueWithTryCatch(BlockingQueue<ResultT> resultTBlockingQueue) {
