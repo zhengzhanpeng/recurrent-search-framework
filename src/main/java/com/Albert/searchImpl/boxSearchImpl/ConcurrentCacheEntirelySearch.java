@@ -40,8 +40,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     @Override
     public List<ResultT> getResultsUntilTimeout(KeyT keyT, long timeout, TimeUnit unit) {
         RuleParameter<ResultT> ruleParameter = createSearchRule(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
-
-        final List<ResultT> resultList = new ArrayList<>();
+        List<ResultT> resultList = new ArrayList<>();
         Future timingCancelFuture = gitService.submit(() -> {
             while (true) {
                 resultList.add(ruleParameter.resultTBlockingQueue.take());
@@ -54,10 +53,16 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public List<ResultT> getResultsUntilEnoughOrTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, expectNum);
-
-        final List<ResultT> resultList = new ArrayList<>();
-        Future timingCancelFuture = startAddResultToListUntilEnough(resultList, ruleParameter);
+        RuleParameter<ResultT> ruleParameter = createSearchRule(keyT, timeout, unit, expectNum);
+        List<ResultT> resultList = new ArrayList<>();
+        Future timingCancelFuture = gitService.submit(() -> {
+            for (int i = 0; i < ruleParameter.expectNum; i++) {
+                try {
+                    resultList.add(ruleParameter.resultTBlockingQueue.take());
+                } catch (InterruptedException e) {
+                }
+            }
+        });
         startTimingCancel(timingCancelFuture, ruleParameter);
         unifyResultCache(ruleParameter, resultList);
         return resultList;
@@ -132,28 +137,11 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     private void startTimingCancel(Future timingCancelFuture, RuleParameter rule) {
         try {
             timingCancelFuture.get(rule.milliTimeout, rule.unit);
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-
         } finally {
             timingCancelFuture.cancel(true);
         }
-    }
-
-    private Future startAddResultToListUntilEnough(List<ResultT> resultList, RuleParameter<ResultT> rule) {
-        return gitService.submit(() -> {
-            for (int i = 0; i < rule.expectNum; i++) {
-                try {
-                    ResultT resultT = rule.resultTBlockingQueue.take();
-                    resultList.add(resultT);
-                } catch (InterruptedException e) {
-
-                }
-            }
-        });
     }
 
     private List startGetResultsUntilEnoughOrOneTimeout(RuleParameter ruleParameter) {
