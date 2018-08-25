@@ -82,7 +82,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     @Override
     public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
         RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, expectNum);
-        List list = startGetResultsUntilEnoughOrOneTimeout(ruleParameter);
+        List list = getResultsUntilEnoughOrOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
         return list;
     }
@@ -146,30 +146,19 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         }
     }
 
-    private List startGetResultsUntilEnoughOrOneTimeout(RuleParameter ruleParameter) {
+    private List getResultsUntilEnoughOrOneTimeout(RuleParameter ruleParameter) {
         List<ResultT> list = new ArrayList<>();
-        boolean notTimeout = true;
-        while (notTimeout) {
-            notTimeout = addToListUntilEnoughOrOneTimeout(list, ruleParameter);
+        while (true) {
+            if (list.size() >= ruleParameter.expectNum) {
+                break;
+            }
+            ResultT result = (ResultT) getResult(ruleParameter);
+            if (result == null) {
+                break;
+            }
+            list.add(result);
         }
         return list;
-    }
-
-    private boolean addToListUntilEnoughOrOneTimeout(List<ResultT> list, RuleParameter<ResultT> rule) {
-        ResultT result = null;
-        if (list.size() >= rule.expectNum) {
-            return false;
-        }
-        try {
-            result = rule.resultTBlockingQueue.poll(rule.milliTimeout, rule.unit);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (result == null) {
-            return false;
-        }
-        list.add(result);
-        return true;
     }
 
     private ResultT takeOfQueueWithTryCatch(BlockingQueue<ResultT> resultTBlockingQueue) {
