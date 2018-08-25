@@ -29,14 +29,9 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         this.gitService = Executors.newCachedThreadPool();
     }
 
-    private BlockingQueue<ResultT> getResultsBlockingQueue(KeyT keySearch) {
-        WeakReference<BlockingQueue<ResultT>> results = cacheResults.compute(keySearch);
-        return results.get();
-    }
-
     @Override
     public List<ResultT> getResultsUntilOneTimeout(KeyT keyT, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
+        RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
 
         List list = startGetResultsUntilOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
@@ -45,10 +40,14 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public List<ResultT> getResultsUntilTimeout(KeyT keyT, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
+        RuleParameter<ResultT> ruleParameter = createSearchRule(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
 
         final List<ResultT> resultList = new ArrayList<>();
-        Future timingCancelFuture = submitToAddResultToList(resultList, ruleParameter);
+        Future timingCancelFuture = gitService.submit(() -> {
+            while (true) {
+                resultList.add(ruleParameter.resultTBlockingQueue.take());
+            }
+        });
         startTimingCancel(timingCancelFuture, ruleParameter);
         unifyResultCache(ruleParameter, resultList);
         return resultList;
@@ -56,7 +55,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public List<ResultT> getResultsUntilEnoughOrTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, expectNum);
+        RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, expectNum);
 
         final List<ResultT> resultList = new ArrayList<>();
         Future timingCancelFuture = startAddResultToListUntilEnough(resultList, ruleParameter);
@@ -67,7 +66,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public List<ResultT> getResultsUntilEnough(KeyT keyT, int expectNum) {
-        RuleParameter<ResultT> rule = createSearchRuleBeforeGetResult(keyT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, expectNum);
+        RuleParameter<ResultT> rule = createSearchRule(keyT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, expectNum);
         List<ResultT> list = startGetResultsUntilEnough(rule);
         unifyResultCache(rule, list);
         return list;
@@ -75,7 +74,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public List<ResultT> getResultsUntilEnoughOrOneTimeout(KeyT keyT, int expectNum, long timeout, TimeUnit unit) {
-        RuleParameter ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, unit, expectNum);
+        RuleParameter ruleParameter = createSearchRule(keyT, timeout, unit, expectNum);
 
         List list = startGetResultsUntilEnoughOrOneTimeout(ruleParameter);
         unifyResultCache(ruleParameter, list);
@@ -84,7 +83,7 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public ResultT getAResult(KeyT keySearch) {
-        BlockingQueue<ResultT> resultTBlockingQueue = getResultsBlockingQueue(keySearch);
+        BlockingQueue<ResultT> resultTBlockingQueue = cacheResults.compute(keySearch).get();
         ResultT resultT = takeOfQueueWithTryCatch(resultTBlockingQueue);
         unifyResultCache(resultT, resultTBlockingQueue);
         return resultT;
@@ -92,21 +91,17 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     @Override
     public ResultT getAResultUntilTimeout(KeyT keyT, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        RuleParameter<ResultT> ruleParameter = createSearchRuleBeforeGetResult(keyT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
+        RuleParameter<ResultT> ruleParameter = createSearchRule(keyT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
 
         ResultT resultT = startGetAResultUntilTimeout(ruleParameter);
         unifyResultCache(resultT, ruleParameter.resultTBlockingQueue);
         return resultT;
     }
 
-    private RuleParameter createSearchRuleBeforeGetResult(KeyT keyT, long timeout, TimeUnit unit, int expectNum) {
-        BlockingQueue<ResultT> resultBlockingQueue = getResultsBlockingQueue(keyT);
-        long milliTimeout = preventTimeoutTooLong(timeout, unit);
-        return getRuleParameter(milliTimeout, expectNum, resultBlockingQueue);
-    }
-
-    private long preventTimeoutTooLong(long timeout, TimeUnit unit) {
-        return ParameterUtil.preventTimeoutTooLong(timeout, unit);
+    private RuleParameter createSearchRule(KeyT keyT, long timeout, TimeUnit unit, int expectNum) {
+        BlockingQueue<ResultT> resultBlockingQueue = cacheResults.compute(keyT).get();
+        long milliTimeout = ParameterUtil.preventTimeoutTooLong(timeout, unit);
+        return new RuleParameter(resultBlockingQueue, milliTimeout, expectNum);
     }
 
     private List<ResultT> startGetResultsUntilOneTimeout(RuleParameter ruleParameter) {
@@ -142,14 +137,6 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
 
     private boolean isNotTimeout(ResultT result) {
         return result != null;
-    }
-
-    private Future<Object> submitToAddResultToList(List<ResultT> resultList, RuleParameter<ResultT> rule) {
-        return gitService.submit(() -> {
-            while (true) {
-                resultList.add(rule.resultTBlockingQueue.take());
-            }
-        });
     }
 
     private void startTimingCancel(Future timingCancelFuture, RuleParameter rule) {
@@ -261,8 +248,4 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         searchMethod.stopSearchNow();
     }
 
-    private RuleParameter getRuleParameter(long milliTimeout, int expectNum, BlockingQueue resultQueue) {
-        RuleParameter<ResultT> ruleParameter = new RuleParameter(resultQueue, milliTimeout, expectNum);
-        return ruleParameter;
-    }
 }
