@@ -5,11 +5,10 @@ import com.Albert.search.openSearch.EntirelyOpenSearch;
 import com.Albert.searchModel.SearchModel;
 import com.Albert.utils.ParameterUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
+
+import static java.util.Arrays.*;
 
 /**
  * @author Albert
@@ -18,7 +17,7 @@ public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements Entir
 
     private static final int NOT_LIMIT_EXPECT_NUM = 0;
     private static final int NOT_HAVE_TIMEOUT = 0;
-    private static final long MAX_WAIT_MILLI = 3*1000*60;
+    private static final long MAX_WAIT_MILLI = 3 * 1000 * 60;
 
     private final SearchModel<KeyT, PathT> searchModel;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -37,12 +36,22 @@ public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements Entir
     }
 
     @Override
+    public ResultT getAResult(PathT pathList, KeyT keyT) {
+        return getAResult(asList(pathList), keyT);
+    }
+
+    @Override
     public ResultT getAResultUntilTimeout(List<PathT> pathList, KeyT keyT, long timeout, TimeUnit unit) {
         SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
         startSearch(parameter, pathList);
         shutdownSearchWhenTimeout(parameter);
         ResultT resultT = getResultAndShutdownNowWhenHaveGot(parameter);
         return resultT;
+    }
+
+    @Override
+    public ResultT getAResultUntilTimeout(PathT pathList, KeyT keyT, long timeout, TimeUnit unit) {
+        return getAResultUntilTimeout(asList(pathList), keyT, timeout, unit);
     }
 
     @Override
