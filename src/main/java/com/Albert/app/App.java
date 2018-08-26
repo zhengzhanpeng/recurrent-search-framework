@@ -6,7 +6,6 @@ import com.Albert.searchModel.DesktopSearchModel;
 import com.Albert.searchModel.SearchModel;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -16,9 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class App {
     public static void main(String[] args) {
         SearchModel searchModel = new DesktopSearchModel();
-        List<String> rootSearch = new ArrayList<>();
-        rootSearch.add("D:\\");
-        EntirelySearch<String, File> search = new ConcurrentEntirelySearch(searchModel, rootSearch);
+        EntirelySearch<String, File> search = new ConcurrentEntirelySearch(searchModel, "D:\\");
 
         List<File> list = search.getResultsUntilEnoughOrOneTimeout("README.html", 3, 5, TimeUnit.SECONDS);
 

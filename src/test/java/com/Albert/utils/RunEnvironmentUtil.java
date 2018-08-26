@@ -1,12 +1,7 @@
 package com.Albert.utils;
 
-import com.Albert.searchModel.DesktopSearchModel;
-import com.Albert.searchModel.SearchModel;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Albert
@@ -17,9 +12,7 @@ public class RunEnvironmentUtil {
 
     public static final String locationBeUse = locationForMac;
 
-    public static final SearchModel searchModel = new DesktopSearchModel();
     public static final String[] fileNames = {locationBeUse};
-    public static final List<String> rootCanBeSearched = Arrays.asList(fileNames);
 
     public static void runBefore() throws IOException {
         File dirFile = new File(locationBeUse);

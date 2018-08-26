@@ -4,6 +4,7 @@ import com.Albert.search.boxSearch.EntirelySearch;
 import com.Albert.searchImpl.openSearchImpl.ConcurrentEntirelyOpenSearch;
 import com.Albert.searchModel.SearchModel;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -15,8 +16,8 @@ public class ConcurrentEntirelySearch<KeyT, ResultT, PathT> implements EntirelyS
     private final List<PathT> rootCanBeSearch;
     private final ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> openSearch;
 
-    public ConcurrentEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearch) {
-        this.rootCanBeSearch = rootCanBeSearch;
+    public ConcurrentEntirelySearch(SearchModel searchModel, PathT... rootCanBeSearch) {
+        this.rootCanBeSearch = Arrays.asList(rootCanBeSearch);
         this.openSearch = new ConcurrentEntirelyOpenSearch<>(searchModel);
     }
 

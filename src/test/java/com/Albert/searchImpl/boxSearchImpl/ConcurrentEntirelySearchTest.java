@@ -1,5 +1,6 @@
 package com.Albert.searchImpl.boxSearchImpl;
 
+import com.Albert.searchModel.DesktopSearchModel;
 import com.Albert.utils.RunEnvironmentUtil;
 import org.junit.jupiter.api.*;
 
@@ -9,10 +10,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static com.Albert.utils.RunEnvironmentUtil.fileNames;
 import static java.time.Duration.ofMillis;
 
 class ConcurrentEntirelySearchTest {
-    final ConcurrentEntirelySearch<String, File, String> searchService = new ConcurrentEntirelySearch<>(RunEnvironmentUtil.searchModel, RunEnvironmentUtil.rootCanBeSearched);
+    final ConcurrentEntirelySearch<String, File, String> searchService = new ConcurrentEntirelySearch<>(new DesktopSearchModel(), fileNames);
     private final String key = "README";
     private final String keyNotExist = "SDFSDFSDF.SDFSF";
 
