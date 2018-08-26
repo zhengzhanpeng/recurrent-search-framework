@@ -31,8 +31,7 @@ public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements Entir
     public ResultT getAResult(List<PathT> pathList, KeyT keyT) {
         SearchParameter parameter = createSearchRuleBeforeSearch(keyT, NOT_HAVE_TIMEOUT, TimeUnit.MILLISECONDS, NOT_LIMIT_EXPECT_NUM);
         startSearch(parameter, pathList);
-        ResultT resultT = getUtilHaveGot(parameter);
-        return resultT;
+        return getUtilHaveGot(parameter);
     }
 
     @Override
@@ -45,8 +44,7 @@ public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements Entir
         SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, NOT_LIMIT_EXPECT_NUM);
         startSearch(parameter, pathList);
         shutdownSearchWhenTimeout(parameter);
-        ResultT resultT = getResultAndShutdownNowWhenHaveGot(parameter);
-        return resultT;
+        return getResultAndShutdownNowWhenHaveGot(parameter);
     }
 
     @Override
@@ -77,8 +75,7 @@ public class ConcurrentEntirelyOpenSearch<KeyT, ResultT, PathT> implements Entir
     public List<ResultT> getResultsUntilEnoughOrOneTimeout(List<PathT> pathList, KeyT keyT, long timeout, TimeUnit unit, int exceptNum) {
         SearchParameter parameter = createSearchRuleBeforeSearch(keyT, timeout, unit, exceptNum);
         startSearch(parameter, pathList);
-        ArrayList<ResultT> list = putResultUntilOneTimeoutOrEnough(parameter);
-        return list;
+        return putResultUntilOneTimeoutOrEnough(parameter);
     }
 
     @Override
