@@ -16,7 +16,7 @@ public class SearchMethod<KeyT, ResultT, PathT> {
     private final SearchModel<KeyT, PathT> searchModel;
     private final ExecutorService searchService;
 
-    private SearchMethod(SearchModel searchModel, List<PathT> rootCanBeSearched) {
+    private SearchMethod(SearchModel searchModel, List rootCanBeSearched) {
         this.searchModel = searchModel;
         this.searchService = Executors.newCachedThreadPool();
         this.rootCanBeSearched = rootCanBeSearched;
