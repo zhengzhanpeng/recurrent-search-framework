@@ -98,7 +98,6 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     @Override
     public ResultT getAResultUntilTimeout(KeyT keyT, long timeout, TimeUnit timeUnit) throws TimeoutException {
         RuleParameter<ResultT> ruleParameter = createSearchRule(keyT, timeout, timeUnit, NOT_LIMIT_EXPECT_NUM);
-
         ResultT resultT = startGetAResultUntilTimeout(ruleParameter);
         unifyResultCache(resultT, ruleParameter.resultTBlockingQueue);
         return resultT;
@@ -181,11 +180,10 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
             saveResult.add(resultT);
         });
         startTimingCancel(future, ruleParameter);
-        ResultT resultT = null;
-        if (saveResult.size() != 0) {
-            resultT = saveResult.get(0);
+        if (saveResult.isEmpty()) {
+            return null;
         }
-        return resultT;
+        return saveResult.get(0);
     }
 
     @Override
