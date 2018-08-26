@@ -38,9 +38,7 @@ public class SearchMethod<KeyT, ResultT, PathT> {
     }
 
     private void startAllSearch(KeyAndResults keyAndResults, List<PathT> canBeSearched) {
-        canBeSearched.forEach(beSearched -> {
-            asyncSearchOne(keyAndResults, beSearched);
-        });
+        canBeSearched.forEach(beSearched -> asyncSearchOne(keyAndResults, beSearched));
     }
 
     private void asyncSearchOne(KeyAndResults keyAndResults, PathT canBeSearched) {
