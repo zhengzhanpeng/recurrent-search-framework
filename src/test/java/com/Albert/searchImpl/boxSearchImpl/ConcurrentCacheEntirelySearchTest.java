@@ -7,7 +7,6 @@ import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -31,16 +30,8 @@ class ConcurrentCacheEntirelySearchTest {
     }
 
     @BeforeEach
-    void makeSureOperatorIsNew() throws IOException {
-        concurrentCacheEntirelyOperator = new ConcurrentCacheEntirelySearch(searchModel, Arrays.asList(fileNames));
-    }
-
-    private void createNewFile(File file) {
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    void makeSureOperatorIsNew() {
+        concurrentCacheEntirelyOperator = new ConcurrentCacheEntirelySearch(searchModel, fileNames);
     }
 
     @Test

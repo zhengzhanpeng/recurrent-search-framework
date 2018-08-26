@@ -8,6 +8,7 @@ import com.Albert.utils.ParameterUtil;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -23,8 +24,8 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
     private final ExecutorService gitService;
     private final SearchMethod<KeyT, ResultT, PathT> searchMethod;
 
-    public ConcurrentCacheEntirelySearch(SearchModel searchModel, List<PathT> rootCanBeSearched) {
-        searchMethod = SearchMethod.createSearchMethod(searchModel, rootCanBeSearched);
+    public ConcurrentCacheEntirelySearch(SearchModel searchModel, PathT... rootCanBeSearched) {
+        searchMethod = SearchMethod.createSearchMethod(searchModel, Arrays.asList(rootCanBeSearched));
         this.cacheResults = EfficientCacheCompute.createNeedComputeFunction(searchMethod::methodOfHowSearch);
         this.gitService = Executors.newCachedThreadPool();
     }
