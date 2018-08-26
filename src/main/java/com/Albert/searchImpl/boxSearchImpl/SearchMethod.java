@@ -62,14 +62,9 @@ public class SearchMethod<KeyT, ResultT, PathT> {
 
     private void continueSearchIfExist(KeyAndResults keyAndResults, MessageOfSearched<ResultT, PathT> messageOfSearched) {
         Optional<List<PathT>> canBeSearchedOptional = messageOfSearched.getCanBeSearched();
-        if (canBeSearchedOptional.isPresent()) {
-            executeCanBeSearched(keyAndResults, canBeSearchedOptional);
-        }
-    }
-
-    private void executeCanBeSearched(KeyAndResults keyAndResults, Optional<List<PathT>> canBeSearchedOptional) {
-        List<PathT> pathTS = canBeSearchedOptional.get();
-        startAllSearch(keyAndResults, pathTS);
+        canBeSearchedOptional.ifPresent(list -> {
+            startAllSearch(keyAndResults, canBeSearchedOptional.get());
+        });
     }
 
     private void saveAResult(KeyAndResults keyAndResults, ResultT trueResult) {
