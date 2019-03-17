@@ -146,13 +146,13 @@ public class ConcurrentCacheEntirelySearch<KeyT, ResultT, PathT> implements Cach
         }
     }
 
-    private List getResultsUntilEnoughOrOneTimeout(RuleParameter ruleParameter) {
+    private List getResultsUntilEnoughOrOneTimeout(RuleParameter<ResultT> ruleParameter) {
         List<ResultT> list = new ArrayList<>();
         while (true) {
             if (list.size() >= ruleParameter.expectNum) {
                 break;
             }
-            ResultT result = (ResultT) getResult(ruleParameter);
+            ResultT result = getResult(ruleParameter);
             if (result == null) {
                 break;
             }
