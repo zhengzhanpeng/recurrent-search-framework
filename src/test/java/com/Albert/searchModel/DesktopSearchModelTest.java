@@ -78,4 +78,13 @@ class DesktopSearchModelTest {
         boolean result = desktopSearchModel.isTrueObject(keySearch, file);
         Assertions.assertEquals(true, result);
     }
+
+    @Test
+    void articleSearch() {
+        ArticleSearchModel articleSearchModel = new ArticleSearchModel();
+        String article = "This is a test article. This article is for testing.";
+        String word = "article";
+        int count = articleSearchModel.search(word, article);
+        Assertions.assertEquals(2, count);
+    }
 }
